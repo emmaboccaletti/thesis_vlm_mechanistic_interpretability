@@ -1,0 +1,47 @@
+name: vlm_qwen_reproducing_env
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - git
+  - ninja
+  - cmake
+  - pytorch=2.5.*
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.1
+  - numpy<2
+  - pillow
+  - tqdm
+  - scipy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - sentencepiece
+  - protobuf
+  - accelerate
+  - datasets
+  - jupyter
+  - ipykernel
+  - pip:
+      - transformers>=4.48,<4.51
+      # - git+https://github.com/huggingface/transformers
+      - tokenizers>=0.20,<0.22
+      - einops
+      - jaxtyping
+      - rich
+      - fancy-einsum
+      - safetensors
+      - qwen-vl-utils
+      - opencv-python
+      - bitsandbytes
+      - peft
+      - better-abc
+      - typeguard
+      - wandb
+      - diffusers
+      - openai
+      # - googletrans==4.0.0rc1
