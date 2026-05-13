@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --partition=gpu_mig
+#SBATCH --gpus=1
+#SBATCH --job-name=InstallPixtralReproducingEnv
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/eboccaletti/thesis_project/job_outputs/slurm_install_pixtral_reproducing_env_%A.out
+
+
+# /home/eboccaletti/thesis_project/job_outputs/slurm_install_pixtral_reproducing_env_%A.out
+# /home/eboccaletti/thesis_project/job_outputs/slurm_install_pixtral_env_%A.out
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+cd /home/eboccaletti/thesis_project
+# conda env create -f thesis_pixtral_gpu.yml
+conda env create -f reproducing_pixtral_env.yml
