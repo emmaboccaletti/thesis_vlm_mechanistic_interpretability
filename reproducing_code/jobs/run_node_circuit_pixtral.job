@@ -1,0 +1,45 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=PixtralNodeCircuit
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/pixtral_node_circuit_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/pixtral_node_circuit_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=00:30:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+# Activate your environment
+source activate vlm_qwen_reproducing_env
+# source /sw/arch/RHEL9/EB_production/2025/software/Anaconda3/2025.06-1/etc/profile.d/conda.sh
+# conda activate vlm_pixtral_reproducing_env
+# export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
+
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Pixtral node circuit job ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+echo "Working dir: $(pwd)"
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+echo "CONDA_PREFIX=$CONDA_PREFIX"
+
+nvidia-smi || true
+
+python -c "import pyarrow; print('pyarrow ok')"
+python -c "import datasets; print('datasets ok')"
+
+python script_node_circuit_discovery_and_eval.py \
+  --model_name pixtral-12b \
+  --model_path /home/eboccaletti/models/pixtral-12b \
+  --task_name counting \
+  --ap_ig_steps 1
+
+echo "End time: $(date)"
+
+#  --model_name mistralai/Pixtral-12B-2409 \

@@ -1,0 +1,49 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=LabelCountImages
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/label_count_imgs_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/label_count_imgs_%j.err
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+# Activate your environment
+source activate vlm_qwen_reproducing_env
+
+set -euo pipefail
+
+cd $HOME
+
+echo "=== Label Counting Images ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+echo "Working dir: $(pwd)"
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
+nvidia-smi || true
+
+# Make sure your OpenAI key is available
+# Option 1: if already saved in your environment
+# echo $OPENAI_API_KEY
+
+# Option 2: uncomment and paste your key (not recommended for shared logs)
+# export OPENAI_API_KEY="your_key_here"
+
+INPUT_DIR="$HOME/data/counting/raw_images/1"
+OUTPUT_DIR="$HOME/reproducing_code/vlm-circuits-analysis/data/counting/images"
+
+mkdir -p "${OUTPUT_DIR}"
+
+python /home/eboccaletti/reproducing_code/vlm-circuits-analysis/data_generation/label_counting_images.py \
+  --input_dir "${INPUT_DIR}" \
+  --output_dir "${OUTPUT_DIR}" \
+  --model gpt-4o
+
+
+
+echo "End time: $(date)"
