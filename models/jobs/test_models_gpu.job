@@ -1,0 +1,27 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=TestModels
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=01:00:00
+#SBATCH --mem=32G
+#SBATCH --output=/home/eboccaletti/models/job_outputs/slurm_output_test_models_%A.out
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+cd /home/eboccaletti
+
+source /sw/arch/RHEL9/EB_production/2025/software/Anaconda3/2025.06-1/etc/profile.d/conda.sh
+conda activate initial_env
+export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
+
+echo "$LD_LIBRARY_PATH"
+
+echo "===== GPU INFO ====="
+nvidia-smi
+echo "===================="
+
+python -u /home/eboccaletti/models/test_models.py

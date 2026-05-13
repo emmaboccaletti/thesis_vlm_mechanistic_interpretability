@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=TestGemma
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=01:00:00
+#SBATCH --output=/home/eboccaletti/models/job_outputs/slurm_test_gemma_%A.out
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+# Activate your environment
+# source activate vlm_gpu
+source activate gemma_qwen_vlm
+# Check whether the GPU is available
+srun python -uc "import torch; print('GPU available?', torch.cuda.is_available())"
+
+echo "===== Model Testing ====="
+srun python -u /home/eboccaletti/models/test_gemma.py
