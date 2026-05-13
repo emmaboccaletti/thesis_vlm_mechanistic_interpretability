@@ -1,0 +1,32 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Repo ID:    mistralai/Pixtral-12B-2409
+Output dir: /scratch-shared/eboccaletti/models/pixtral_12b_2409
+HF_HOME:    /home/eboccaletti/.cache/huggingface
+/home/eboccaletti/.conda/envs/initial_env/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `snapshot_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:00<00:02,  1.76it/s]Fetching 5 files:  60%|██████    | 3/5 [00:22<00:16,  8.42s/it]Fetching 5 files: 100%|██████████| 5/5 [00:22<00:00,  4.58s/it]
+
+Download complete.
+Saved to: /scratch-shared/eboccaletti/models/pixtral_12b_2409
+
+Top-level contents:
+  .cache
+  .gitattributes
+  README.md
+  consolidated.safetensors
+  params.json
+  tekken.json

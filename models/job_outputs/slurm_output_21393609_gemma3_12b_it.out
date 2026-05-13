@@ -1,0 +1,45 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Repo ID:    google/gemma-3-12b-it
+Output dir: /scratch-shared/eboccaletti/models/gemma3_12b_it
+HF_HOME:    /home/eboccaletti/.cache/huggingface
+/home/eboccaletti/.conda/envs/initial_env/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `snapshot_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Fetching 18 files:   0%|          | 0/18 [00:00<?, ?it/s]Fetching 18 files:   6%|▌         | 1/18 [00:00<00:06,  2.79it/s]Fetching 18 files:  39%|███▉      | 7/18 [00:08<00:14,  1.33s/it]Fetching 18 files:  44%|████▍     | 8/18 [00:09<00:11,  1.13s/it]Fetching 18 files:  50%|█████     | 9/18 [00:09<00:08,  1.06it/s]Fetching 18 files:  56%|█████▌    | 10/18 [00:09<00:06,  1.28it/s]Fetching 18 files: 100%|██████████| 18/18 [00:09<00:00,  1.87it/s]
+
+Download complete.
+Saved to: /scratch-shared/eboccaletti/models/gemma3_12b_it
+
+Top-level contents:
+  .cache
+  .gitattributes
+  README.md
+  added_tokens.json
+  chat_template.json
+  config.json
+  generation_config.json
+  model-00001-of-00005.safetensors
+  model-00002-of-00005.safetensors
+  model-00003-of-00005.safetensors
+  model-00004-of-00005.safetensors
+  model-00005-of-00005.safetensors
+  model.safetensors.index.json
+  preprocessor_config.json
+  processor_config.json
+  special_tokens_map.json
+  tokenizer.json
+  tokenizer.model
+  tokenizer_config.json

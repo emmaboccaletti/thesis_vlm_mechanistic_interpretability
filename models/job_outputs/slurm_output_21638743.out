@@ -1,0 +1,44 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Repo ID:    mistral-experimental/pixtral-12b
+Output dir: /home/eboccaletti/models/pixtral-12b
+HF_HOME:    /home/eboccaletti/.cache/huggingface
+/home/eboccaletti/.conda/envs/initial_env/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `snapshot_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files:   6%|▌         | 1/17 [00:00<00:09,  1.66it/s]Fetching 17 files:  29%|██▉       | 5/17 [00:10<00:26,  2.18s/it]Fetching 17 files:  94%|█████████▍| 16/17 [00:12<00:00,  1.47it/s]Fetching 17 files: 100%|██████████| 17/17 [00:12<00:00,  1.31it/s]
+
+Download complete.
+Saved to: /home/eboccaletti/models/pixtral-12b
+
+Top-level contents:
+  .cache
+  .gitattributes
+  README.md
+  chat_template.json
+  config.json
+  generation_config.json
+  model-00001-of-00006.safetensors
+  model-00002-of-00006.safetensors
+  model-00003-of-00006.safetensors
+  model-00004-of-00006.safetensors
+  model-00005-of-00006.safetensors
+  model-00006-of-00006.safetensors
+  model.safetensors.index.json
+  preprocessor_config.json
+  processor_config.json
+  special_tokens_map.json
+  tokenizer.json
+  tokenizer_config.json

@@ -1,0 +1,45 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+Repo ID:    Qwen/Qwen2-VL-7B-Instruct
+Output dir: /home/eboccaletti/models/qwen2vl7b
+HF_HOME:    /home/eboccaletti/.cache/huggingface
+/home/eboccaletti/.conda/envs/initial_env/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `snapshot_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files:   6%|▌         | 1/17 [00:00<00:02,  7.35it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 17 files:  12%|█▏        | 2/17 [00:00<00:02,  6.75it/s]Fetching 17 files:  47%|████▋     | 8/17 [00:06<00:07,  1.15it/s]Fetching 17 files:  59%|█████▉    | 10/17 [00:06<00:04,  1.47it/s]Fetching 17 files: 100%|██████████| 17/17 [00:06<00:00,  2.50it/s]
+
+Download complete.
+Saved to: /home/eboccaletti/models/qwen2vl7b
+
+Top-level contents:
+  .cache
+  .gitattributes
+  LICENSE
+  README.md
+  chat_template.json
+  config.json
+  generation_config.json
+  merges.txt
+  model-00001-of-00005.safetensors
+  model-00002-of-00005.safetensors
+  model-00003-of-00005.safetensors
+  model-00004-of-00005.safetensors
+  model-00005-of-00005.safetensors
+  model.safetensors.index.json
+  preprocessor_config.json
+  tokenizer.json
+  tokenizer_config.json
+  vocab.json

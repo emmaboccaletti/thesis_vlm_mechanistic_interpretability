@@ -1,0 +1,52 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+GPU available? True
+===== Model Testing =====
+WARNING[XFORMERS]: xFormers can't load C++/CUDA extensions. xFormers was built for:
+    PyTorch 2.10.0+cu128 with CUDA 1208 (you have 2.11.0+cu130)
+    Python  3.10.19 (you have 3.12.7)
+  Please reinstall xformers (see https://github.com/facebookresearch/xformers#installing-xformers)
+  Memory-efficient attention, SwiGLU, sparse and more won't be available.
+  Set XFORMERS_MORE_DETAILS=1 for more details
+Loading Pixtral...
+Dropping extra args {'image_break_token_id': 12, 'image_end_token_id': 13}
+Dropping extra args {'max_position_embeddings': 131072}
+Traceback (most recent call last):
+  File "/home/eboccaletti/models/test_pixtral.py", line 6, in <module>
+    model = Transformer.from_folder(model_path)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_gpu/lib/python3.12/site-packages/mistral_inference/transformer.py", line 338, in from_folder
+    return model.to(device=device, dtype=dtype)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_gpu/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1384, in to
+    return self._apply(convert)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_gpu/lib/python3.12/site-packages/torch/nn/modules/module.py", line 934, in _apply
+    module._apply(fn)
+  File "/home/eboccaletti/.conda/envs/vlm_gpu/lib/python3.12/site-packages/torch/nn/modules/module.py", line 934, in _apply
+    module._apply(fn)
+  File "/home/eboccaletti/.conda/envs/vlm_gpu/lib/python3.12/site-packages/torch/nn/modules/module.py", line 934, in _apply
+    module._apply(fn)
+  [Previous line repeated 1 more time]
+  File "/home/eboccaletti/.conda/envs/vlm_gpu/lib/python3.12/site-packages/torch/nn/modules/module.py", line 965, in _apply
+    param_applied = fn(param)
+                    ^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_gpu/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1370, in convert
+    return t.to(
+           ^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 140.00 MiB. GPU 0 has a total capacity of 19.62 GiB of which 62.88 MiB is free. Process 2592432 has 1.04 GiB memory in use. Including non-PyTorch memory, this process has 19.47 GiB memory in use. Of the allocated memory 19.29 GiB is allocated by PyTorch, and 11.25 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
+srun: error: gcn3: task 0: Exited with exit code 1
+srun: Terminating StepId=21399743.1

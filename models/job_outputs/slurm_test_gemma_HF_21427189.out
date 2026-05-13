@@ -1,0 +1,96 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+GPU available? True
+===== Model Testing =====
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/1065 [00:00<?, ?it/s]Loading weights:  38%|███▊      | 403/1065 [00:00<00:00, 3915.91it/s]Loading weights:  75%|███████▍  | 795/1065 [00:00<00:00, 2836.32it/s]Loading weights: 100%|██████████| 1065/1065 [00:00<00:00, 2518.72it/s]
+Passing `generation_config` together with generation-related arguments=({'max_new_tokens'}) is deprecated and will be removed in future versions. Please pass either a `generation_config` object OR all generation parameters explicitly, but not both.
+Both `max_new_tokens` (=200) and `max_length`(=20) seem to have been set. `max_new_tokens` will take precedence. Please refer to the documentation for more information. (https://huggingface.co/docs/transformers/main/en/main_classes/text_generation)
+Traceback (most recent call last):
+  File "/home/eboccaletti/models/test_gemma_HF.py", line 28, in <module>
+    output = pipe(text=messages, max_new_tokens=200)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/pipelines/image_text_to_text.py", line 283, in __call__
+    return super().__call__(Chat(text), **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/pipelines/base.py", line 1264, in __call__
+    return self.run_single(inputs, preprocess_params, forward_params, postprocess_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/pipelines/base.py", line 1271, in run_single
+    model_outputs = self.forward(model_inputs, **forward_params)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/pipelines/base.py", line 1163, in forward
+    model_outputs = self._forward(model_inputs, **forward_params)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/pipelines/image_text_to_text.py", line 372, in _forward
+    generated_sequence = self.model.generate(**model_inputs, **generate_kwargs)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/generation/utils.py", line 2535, in generate
+    result = decoding_method(
+             ^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/generation/utils.py", line 2728, in _sample
+    outputs = self._prefill(
+              ^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/generation/utils.py", line 3760, in _prefill
+    return self(**model_inputs, return_dict=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1049, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 931, in forward
+    causal_mask_mapping = create_causal_mask_mapping(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 799, in create_causal_mask_mapping
+    return create_masks_for_generate(**mask_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/masking_utils.py", line 1472, in create_masks_for_generate
+    causal_masks[layer_pattern] = LAYER_PATTERN_TO_MASK_FUNCTION_MAPPING[layer_pattern](**mask_kwargs)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/masking_utils.py", line 1175, in create_sliding_window_causal_mask
+    raise ValueError("Using `or_mask_function` or `and_mask_function` arguments require torch>=2.6")
+ValueError: Using `or_mask_function` or `and_mask_function` arguments require torch>=2.6
+srun: error: gcn11: task 0: Exited with exit code 1
+srun: Terminating StepId=21427189.1

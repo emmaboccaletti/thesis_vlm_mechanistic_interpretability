@@ -1,0 +1,79 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+GPU available? True
+===== Model Testing =====
+Loading weights:   0%|          | 0/1065 [00:00<?, ?it/s]Loading weights:   0%|          | 1/1065 [00:02<40:10,  2.27s/it]Loading weights:   0%|          | 3/1065 [00:02<11:12,  1.58it/s]Loading weights:   0%|          | 4/1065 [00:02<08:35,  2.06it/s]Loading weights:   1%|          | 11/1065 [00:02<02:10,  8.10it/s]Loading weights:   1%|▏         | 14/1065 [00:02<01:49,  9.59it/s]Loading weights:   2%|▏         | 17/1065 [00:03<01:46,  9.87it/s]Loading weights:   2%|▏         | 19/1065 [00:03<01:38, 10.58it/s]Loading weights:   3%|▎         | 27/1065 [00:03<00:50, 20.46it/s]Loading weights:   3%|▎         | 31/1065 [00:03<01:07, 15.32it/s]Loading weights:   4%|▍         | 40/1065 [00:04<00:43, 23.77it/s]Loading weights:   4%|▍         | 44/1065 [00:04<00:55, 18.25it/s]Loading weights:   5%|▍         | 53/1065 [00:04<00:42, 23.89it/s]Loading weights:   5%|▌         | 57/1065 [00:05<01:07, 14.87it/s]Loading weights:   6%|▌         | 64/1065 [00:05<00:49, 20.35it/s]Loading weights:   6%|▋         | 68/1065 [00:05<00:50, 19.83it/s]Loading weights:   7%|▋         | 72/1065 [00:06<01:11, 13.93it/s]Loading weights:   7%|▋         | 78/1065 [00:06<00:52, 18.66it/s]Loading weights:   8%|▊         | 82/1065 [00:06<01:13, 13.40it/s]Loading weights:   8%|▊         | 88/1065 [00:06<00:55, 17.56it/s]Loading weights:   9%|▊         | 92/1065 [00:07<00:48, 20.13it/s]Loading weights:   9%|▉         | 96/1065 [00:07<01:12, 13.30it/s]Loading weights:  10%|▉         | 104/1065 [00:07<00:49, 19.32it/s]Loading weights:  10%|█         | 108/1065 [00:08<00:56, 17.03it/s]Loading weights:  11%|█         | 114/1065 [00:08<00:43, 21.80it/s]Loading weights:  11%|█         | 118/1065 [00:08<00:47, 20.05it/s]Loading weights:  11%|█▏        | 121/1065 [00:09<01:07, 13.96it/s]Loading weights:  12%|█▏        | 124/1065 [00:09<01:03, 14.76it/s]Loading weights:  12%|█▏        | 129/1065 [00:09<00:49, 18.75it/s]Loading weights:  12%|█▏        | 133/1065 [00:10<01:24, 10.99it/s]Loading weights:  13%|█▎        | 135/1065 [00:10<01:27, 10.65it/s]Loading weights:  13%|█▎        | 143/1065 [00:10<00:51, 17.88it/s]Loading weights:  14%|█▎        | 146/1065 [00:10<00:49, 18.41it/s]Loading weights:  14%|█▍        | 149/1065 [00:10<01:09, 13.19it/s]Loading weights:  14%|█▍        | 154/1065 [00:11<00:57, 15.85it/s]Loading weights:  15%|█▍        | 157/1065 [00:11<00:54, 16.73it/s]Loading weights:  15%|█▌        | 160/1065 [00:12<01:45,  8.58it/s]Loading weights:  16%|█▌        | 170/1065 [00:12<00:58, 15.34it/s]Loading weights:  16%|█▌        | 173/1065 [00:12<00:56, 15.66it/s]Loading weights:  17%|█▋        | 176/1065 [00:12<00:53, 16.51it/s]Loading weights:  17%|█▋        | 183/1065 [00:13<00:46, 18.94it/s]Loading weights:  18%|█▊        | 187/1065 [00:13<00:47, 18.40it/s]Loading weights:  18%|█▊        | 196/1065 [00:13<00:31, 27.69it/s]Loading weights:  19%|█▉        | 200/1065 [00:13<00:52, 16.43it/s]Loading weights:  20%|█▉        | 209/1065 [00:14<00:37, 22.76it/s]Loading weights:  20%|██        | 213/1065 [00:14<00:53, 15.82it/s]Loading weights:  21%|██        | 222/1065 [00:14<00:38, 21.70it/s]Loading weights:  21%|██        | 226/1065 [00:15<00:45, 18.33it/s]Loading weights:  22%|██▏       | 235/1065 [00:15<00:32, 25.36it/s]Loading weights:  22%|██▏       | 239/1065 [00:15<00:42, 19.47it/s]Loading weights:  23%|██▎       | 248/1065 [00:15<00:29, 27.56it/s]Loading weights:  24%|██▍       | 253/1065 [00:16<00:38, 20.84it/s]Loading weights:  25%|██▍       | 261/1065 [00:16<00:29, 27.15it/s]Loading weights:  25%|██▍       | 266/1065 [00:16<00:39, 20.38it/s]Loading weights:  26%|██▌       | 274/1065 [00:17<00:29, 27.19it/s]Loading weights:  26%|██▌       | 279/1065 [00:17<00:38, 20.61it/s]Loading weights:  27%|██▋       | 287/1065 [00:17<00:28, 27.01it/s]Loading weights:  27%|██▋       | 292/1065 [00:18<00:41, 18.46it/s]Loading weights:  28%|██▊       | 299/1065 [00:18<00:33, 22.81it/s]Loading weights:  28%|██▊       | 303/1065 [00:18<00:41, 18.29it/s]Loading weights:  29%|██▊       | 306/1065 [00:18<00:40, 18.71it/s]Loading weights:  29%|██▉       | 312/1065 [00:18<00:32, 22.84it/s]Loading weights:  30%|██▉       | 316/1065 [00:19<01:03, 11.76it/s]Loading weights:  31%|███       | 326/1065 [00:19<00:39, 18.55it/s]Loading weights:  31%|███       | 330/1065 [00:20<00:53, 13.64it/s]Loading weights:  31%|███▏      | 335/1065 [00:20<00:44, 16.39it/s]Loading weights:  32%|███▏      | 338/1065 [00:21<00:57, 12.74it/s]Loading weights:  32%|███▏      | 341/1065 [00:21<00:57, 12.54it/s]Loading weights:  32%|███▏      | 343/1065 [00:22<01:38,  7.32it/s]Loading weights:  33%|███▎      | 351/1065 [00:22<00:54, 13.14it/s]Loading weights:  33%|███▎      | 355/1065 [00:22<01:05, 10.76it/s]Loading weights:  34%|███▎      | 358/1065 [00:23<00:58, 12.12it/s]Loading weights:  34%|███▍      | 364/1065 [00:23<00:43, 16.30it/s]Loading weights:  34%|███▍      | 367/1065 [00:23<00:50, 13.95it/s]Loading weights:  35%|███▍      | 370/1065 [00:24<01:28,  7.88it/s]Loading weights:  35%|███▌      | 378/1065 [00:24<00:50, 13.53it/s]Loading weights:  36%|███▌      | 382/1065 [00:25<00:56, 12.18it/s]Loading weights:  37%|███▋      | 391/1065 [00:25<00:35, 19.00it/s]Loading weights:  37%|███▋      | 395/1065 [00:25<00:42, 15.92it/s]Loading weights:  38%|███▊      | 404/1065 [00:25<00:27, 23.72it/s]Loading weights:  38%|███▊      | 409/1065 [00:26<00:35, 18.43it/s]Loading weights:  39%|███▉      | 417/1065 [00:26<00:25, 25.12it/s]Loading weights:  40%|███▉      | 422/1065 [00:26<00:32, 19.56it/s]Loading weights:  40%|████      | 430/1065 [00:26<00:24, 26.37it/s]Loading weights:  41%|████      | 435/1065 [00:27<00:31, 20.21it/s]Loading weights:  42%|████▏     | 443/1065 [00:27<00:22, 27.07it/s]Loading weights:  42%|████▏     | 448/1065 [00:27<00:30, 20.48it/s]Loading weights:  43%|████▎     | 456/1065 [00:27<00:22, 27.23it/s]Loading weights:  43%|████▎     | 461/1065 [00:28<00:29, 20.15it/s]Loading weights:  44%|████▍     | 469/1065 [00:28<00:22, 26.94it/s]Loading weights:  45%|████▍     | 474/1065 [00:28<00:28, 20.46it/s]Loading weights:  45%|████▍     | 479/1065 [00:29<00:26, 22.26it/s]Loading weights:  45%|████▌     | 484/1065 [00:29<00:33, 17.53it/s]Loading weights:  46%|████▌     | 487/1065 [00:29<00:32, 18.06it/s]Loading weights:  46%|████▋     | 495/1065 [00:29<00:24, 23.22it/s]Loading weights:  47%|████▋     | 498/1065 [00:30<00:28, 20.04it/s]Loading weights:  47%|████▋     | 501/1065 [00:30<00:27, 20.21it/s]Loading weights:  48%|████▊     | 507/1065 [00:30<00:21, 26.50it/s]Loading weights:  48%|████▊     | 511/1065 [00:30<00:25, 21.44it/s]Loading weights:  48%|████▊     | 514/1065 [00:30<00:25, 21.32it/s]Loading weights:  49%|████▊     | 518/1065 [00:30<00:23, 22.99it/s]Loading weights:  49%|████▉     | 521/1065 [00:31<00:30, 17.55it/s]Loading weights:  49%|████▉     | 524/1065 [00:31<00:42, 12.76it/s]Loading weights:  49%|████▉     | 526/1065 [00:31<00:41, 13.11it/s]Loading weights:  50%|█████     | 533/1065 [00:31<00:24, 21.55it/s]Loading weights:  50%|█████     | 537/1065 [00:32<00:32, 16.19it/s]Loading weights:  51%|█████     | 540/1065 [00:32<00:30, 17.15it/s]Loading weights:  51%|█████     | 544/1065 [00:32<00:27, 19.09it/s]Loading weights:  51%|█████▏    | 548/1065 [00:33<00:41, 12.43it/s]Loading weights:  52%|█████▏    | 550/1065 [00:33<01:10,  7.34it/s]Loading weights:  53%|█████▎    | 560/1065 [00:34<00:33, 15.02it/s]Loading weights:  53%|█████▎    | 564/1065 [00:34<00:45, 11.00it/s]Loading weights:  53%|█████▎    | 567/1065 [00:34<00:39, 12.45it/s]Loading weights:  54%|█████▎    | 570/1065 [00:35<00:38, 12.78it/s]Loading weights:  54%|█████▍    | 573/1065 [00:35<00:50,  9.65it/s]Loading weights:  54%|█████▍    | 576/1065 [00:35<00:54,  8.98it/s]Loading weights:  54%|█████▍    | 578/1065 [00:36<00:59,  8.24it/s]Loading weights:  55%|█████▍    | 585/1065 [00:36<00:33, 14.30it/s]Loading weights:  55%|█████▌    | 588/1065 [00:36<00:30, 15.52it/s]Loading weights:  55%|█████▌    | 591/1065 [00:37<00:39, 11.87it/s]Loading weights:  56%|█████▌    | 598/1065 [00:37<00:26, 17.62it/s]Loading weights:  56%|█████▋    | 601/1065 [00:37<00:26, 17.46it/s]Loading weights:  57%|█████▋    | 604/1065 [00:37<00:38, 12.02it/s]Loading weights:  57%|█████▋    | 611/1065 [00:37<00:24, 18.45it/s]Loading weights:  58%|█████▊    | 614/1065 [00:38<00:31, 14.30it/s]Loading weights:  58%|█████▊    | 617/1065 [00:38<00:34, 12.83it/s]Loading weights:  59%|█████▊    | 624/1065 [00:38<00:23, 18.82it/s]Loading weights:  59%|█████▉    | 632/1065 [00:38<00:16, 26.84it/s]Loading weights:  60%|█████▉    | 637/1065 [00:39<00:15, 27.53it/s]Loading weights:  61%|██████    | 650/1065 [00:39<00:10, 41.43it/s]Loading weights:  62%|██████▏   | 660/1065 [00:39<00:07, 50.86it/s]Loading weights:  63%|██████▎   | 668/1065 [00:39<00:07, 55.85it/s]Loading weights:  63%|██████▎   | 675/1065 [00:39<00:07, 51.42it/s]Loading weights:  66%|██████▌   | 700/1065 [00:39<00:04, 87.03it/s]Loading weights:  68%|██████▊   | 729/1065 [00:39<00:02, 130.26it/s]Loading weights:  71%|███████   | 753/1065 [00:40<00:02, 119.77it/s]Loading weights:  75%|███████▍  | 797/1065 [00:40<00:01, 181.61it/s]Loading weights:  77%|███████▋  | 819/1065 [00:40<00:01, 169.05it/s]Loading weights:  79%|███████▉  | 840/1065 [00:40<00:01, 168.89it/s]Loading weights:  81%|████████  | 859/1065 [00:40<00:01, 152.80it/s]Loading weights:  82%|████████▏ | 876/1065 [00:40<00:01, 141.04it/s]Loading weights:  84%|████████▍ | 892/1065 [00:40<00:01, 138.94it/s]Loading weights:  85%|████████▌ | 907/1065 [00:41<00:01, 122.86it/s]Loading weights:  86%|████████▋ | 920/1065 [00:41<00:01, 109.87it/s]Loading weights:  88%|████████▊ | 941/1065 [00:41<00:00, 130.55it/s]Loading weights:  90%|█████████ | 961/1065 [00:41<00:00, 136.29it/s]Loading weights:  92%|█████████▏| 977/1065 [00:41<00:00, 141.95it/s]Loading weights:  94%|█████████▍| 1005/1065 [00:41<00:00, 177.14it/s]Loading weights:  98%|█████████▊| 1043/1065 [00:41<00:00, 229.16it/s]Loading weights: 100%|██████████| 1065/1065 [00:41<00:00, 25.44it/s] 
+The following generation flags are not valid and may be ignored: ['top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+Traceback (most recent call last):
+  File "/home/eboccaletti/models/test_gemma_HF2.py", line 37, in <module>
+    generation = model.generate(**inputs, max_new_tokens=100, do_sample=False)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/generation/utils.py", line 2535, in generate
+    result = decoding_method(
+             ^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/generation/utils.py", line 2728, in _sample
+    outputs = self._prefill(
+              ^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/generation/utils.py", line 3760, in _prefill
+    return self(**model_inputs, return_dict=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1049, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 931, in forward
+    causal_mask_mapping = create_causal_mask_mapping(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 799, in create_causal_mask_mapping
+    return create_masks_for_generate(**mask_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/masking_utils.py", line 1472, in create_masks_for_generate
+    causal_masks[layer_pattern] = LAYER_PATTERN_TO_MASK_FUNCTION_MAPPING[layer_pattern](**mask_kwargs)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/gemma_qwen_vlm/lib/python3.12/site-packages/transformers/masking_utils.py", line 966, in create_causal_mask
+    raise ValueError("Using `or_mask_function` or `and_mask_function` arguments require torch>=2.6")
+ValueError: Using `or_mask_function` or `and_mask_function` arguments require torch>=2.6
+srun: error: gcn33: task 0: Exited with exit code 1
+srun: Terminating StepId=21426988.1

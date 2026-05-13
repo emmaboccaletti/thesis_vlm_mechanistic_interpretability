@@ -1,0 +1,21 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+GPU available? True
+===== Model Testing =====
+`torch_dtype` is deprecated! Use `dtype` instead!
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:09<00:36,  9.08s/it]Fetching 5 files:  40%|████      | 2/5 [00:09<00:11,  3.90s/it]Fetching 5 files: 100%|██████████| 5/5 [00:09<00:00,  1.87s/it]
+Loading weights:   0%|          | 0/1065 [00:00<?, ?it/s]Loading weights:  34%|███▎      | 357/1065 [00:00<00:00, 3494.86it/s]Loading weights:  66%|██████▋   | 707/1065 [00:00<00:00, 3131.24it/s]Loading weights:  96%|█████████▌| 1023/1065 [00:00<00:00, 2941.77it/s]Loading weights: 100%|██████████| 1065/1065 [00:00<00:00, 3053.26it/s]
+Done
