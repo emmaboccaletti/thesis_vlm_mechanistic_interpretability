@@ -1,0 +1,29 @@
+=== Qwen node circuit: sentiment analysis job ===
+Host: gcn150.local.snellius.surf.nl
+Start time: Tue Apr  7 23:26:55 CEST 2026
+Working dir: /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+CUDA_VISIBLE_DEVICES=0
+Tue Apr  7 23:26:55 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100                    On  |   00000000:C6:00.0 Off |                    0 |
+| N/A   32C    P0             68W /  700W |       0MiB /  95830MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+The third_partyTransformerLens imported successfully on first try
+System path: /gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/third_party/TransformerLens
+Loaded pretrained model qwen2-7b-vl-instruct into HookedVLTransformer
+End time: Wed Apr  8 04:04:51 CEST 2026

@@ -1,0 +1,51 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 17:02:51 - INFO - Running script_node_intersection.py
+2026-04-14 17:02:51 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:00<00:02,  1.72it/s]Loading checkpoint shards:  40%|████      | 2/5 [00:01<00:01,  2.02it/s]Loading checkpoint shards:  60%|██████    | 3/5 [00:01<00:00,  2.09it/s]Loading checkpoint shards:  80%|████████  | 4/5 [00:02<00:00,  1.21it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:02<00:00,  1.75it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:02<00:00,  1.69it/s]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 6d6ec61d-7f5b-4f79-a953-e9e599c733f5)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:05 - WARNING - '(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 6d6ec61d-7f5b-4f79-a953-e9e599c733f5)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 1s [Retry 1/5].
+2026-04-14 17:03:05 - WARNING - Retrying in 1s [Retry 1/5].
+HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:06 - WARNING - HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 2s [Retry 2/5].
+2026-04-14 17:03:06 - WARNING - Retrying in 2s [Retry 2/5].
+HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:08 - WARNING - HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 4s [Retry 3/5].
+2026-04-14 17:03:08 - WARNING - Retrying in 4s [Retry 3/5].
+HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:12 - WARNING - HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 8s [Retry 4/5].
+2026-04-14 17:03:12 - WARNING - Retrying in 8s [Retry 4/5].
+HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:20 - WARNING - HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 8s [Retry 5/5].
+2026-04-14 17:03:20 - WARNING - Retrying in 8s [Retry 5/5].
+2026-04-14 17:03:30 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 17:03:43 - INFO - Model loaded
+2026-04-14 17:03:43 - INFO - Loading dataset for task color_ordering
+2026-04-14 17:05:06 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:05:06 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:05:27 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:05:27 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:05:27 - INFO - Analyzing intersection of components
+2026-04-14 17:05:27 - INFO - Loading L and VL scores
+2026-04-14 17:05:27 - INFO - Loading L and VL scores
+2026-04-14 17:11:34 - INFO - {'l_percent': 0.05, 'vl_percent': 0.08, 'vl_head_iou': 0.21580127007844602, 'l_head_iou': 0.21464060947333555, 'vl_mlp_iou': 0.1752868801192083, 'l_mlp_iou': 0.17605481446001972, 'vl_head_baseline': 0.07431461578251623, 'vl_mlp_baseline': 0.0744886659107357, 'l_head_baseline': 0.046945630987434164, 'l_mlp_baseline': 0.04710861300198797, 'vl_D_head_iou': 0.086544437538844, 'l_D_head_iou': 0.1817880657584165, 'vl_Q_head_iou': 0.46506247107820453, 'l_Q_head_iou': 0.46506247107820453, 'vl_G_head_iou': 0.8304347826086956, 'l_G_head_iou': 0.8304347826086956, 'vl_D_neurons_iou': 0.09415498290539452, 'l_D_neurons_iou': 0.1502986386606782, 'vl_Q_neurons_iou': 0.43101186712464457, 'l_Q_neurons_iou': 0.43101186712464457, 'vl_G_neurons_iou': 0.8156356131883846, 'l_G_neurons_iou': 0.8156356131883846, 'vl_D_head_baseline': 0.05029469548133595, 'l_D_head_baseline': 0.07694849448597745, 'vl_Q_head_baseline': 0.03305420890260027, 'l_Q_head_baseline': 0.03305420890260027, 'vl_G_head_baseline': 0.031914893617021274, 'l_G_head_baseline': 0.031914893617021274, 'vl_D_neurons_baseline': 0.04995342289125897, 'l_D_neurons_baseline': 0.07686173537295918, 'vl_Q_neurons_baseline': 0.03171058304940569, 'l_Q_neurons_baseline': 0.03171058304940569, 'vl_G_neurons_baseline': 0.0313871127150751, 'l_G_neurons_baseline': 0.0313871127150751, 'vl_D_head_iou_no_pos': 0.49283667621776506, 'l_D_head_iou_no_pos': 0.49283667621776506, 'vl_D_neurons_iou_no_pos': 0.6090950849793294, 'l_D_neurons_iou_no_pos': 0.6090950849793294, 'vl_D_head_baseline_no_pos': 0.7308673469387755, 'l_D_head_baseline_no_pos': 0.7308673469387755, 'vl_D_neurons_baseline_no_pos': 0.7357873596273702, 'l_D_neurons_baseline_no_pos': 0.7357873596273702}
+2026-04-14 17:11:34 - INFO - Analysis complete

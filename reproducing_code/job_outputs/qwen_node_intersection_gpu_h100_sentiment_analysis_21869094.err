@@ -1,0 +1,35 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 17:02:45 - INFO - Running script_node_intersection.py
+2026-04-14 17:02:45 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:00<00:02,  1.52it/s]Loading checkpoint shards:  40%|████      | 2/5 [00:01<00:01,  1.79it/s]Loading checkpoint shards:  60%|██████    | 3/5 [00:01<00:01,  1.90it/s]Loading checkpoint shards:  80%|████████  | 4/5 [00:02<00:00,  1.96it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:02<00:00,  2.69it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:02<00:00,  2.22it/s]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 4ff19826-bf83-4c09-a3ad-a6c28fef6a31)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:02:58 - WARNING - '(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 4ff19826-bf83-4c09-a3ad-a6c28fef6a31)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 1s [Retry 1/5].
+2026-04-14 17:02:58 - WARNING - Retrying in 1s [Retry 1/5].
+2026-04-14 17:03:10 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 17:03:23 - INFO - Model loaded
+2026-04-14 17:03:23 - INFO - Loading dataset for task sentiment_analysis
+2026-04-14 17:03:27 - INFO - Split to 165 discovery prompts and 55 eval prompts
+2026-04-14 17:03:27 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:03:43 - INFO - Split to 165 discovery prompts and 55 eval prompts
+2026-04-14 17:03:43 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:03:43 - INFO - Analyzing intersection of components
+2026-04-14 17:03:43 - INFO - Loading L and VL scores
+2026-04-14 17:03:43 - INFO - Loading L and VL scores
+2026-04-14 17:08:46 - INFO - {'l_percent': 0.05, 'vl_percent': 0.08, 'vl_head_iou': 0.16197324751081163, 'l_head_iou': 0.22569169960474308, 'vl_mlp_iou': 0.1468610976508567, 'l_mlp_iou': 0.21681061104407534, 'vl_head_baseline': 0.07340538770162941, 'vl_mlp_baseline': 0.07338881466865922, 'l_head_baseline': 0.04736028715289895, 'l_mlp_baseline': 0.046787546272320436, 'vl_D_head_iou': 0.19383429672447014, 'l_D_head_iou': 0.1335809602421241, 'vl_Q_head_iou': 0.2047279214986619, 'l_Q_head_iou': 0.2040520984081042, 'vl_G_head_iou': 0.5714285714285714, 'l_G_head_iou': 0.5714285714285714, 'vl_D_neurons_iou': 0.20204325796545317, 'l_D_neurons_iou': 0.12383783037860963, 'vl_Q_neurons_iou': 0.19271043191466036, 'l_Q_neurons_iou': 0.19039127997370597, 'vl_G_neurons_iou': 0.562098895240788, 'l_G_neurons_iou': 0.562098895240788, 'vl_D_head_baseline': 0.050837138508371384, 'l_D_head_baseline': 0.07592133238837703, 'vl_Q_head_baseline': 0.031133828996282528, 'l_Q_head_baseline': 0.03051001821493625, 'vl_G_head_baseline': 0.054945054945054944, 'l_G_head_baseline': 0.054945054945054944, 'vl_D_neurons_baseline': 0.04996992708801818, 'l_D_neurons_baseline': 0.07590980107055402, 'vl_Q_neurons_baseline': 0.032583740323644896, 'l_Q_neurons_baseline': 0.03204238326315231, 'vl_G_neurons_baseline': 0.0320476375714414, 'l_G_neurons_baseline': 0.0320476375714414, 'vl_D_head_iou_no_pos': 0.36318407960199006, 'l_D_head_iou_no_pos': 0.36318407960199006, 'vl_D_neurons_iou_no_pos': 0.5615006509551771, 'l_D_neurons_iou_no_pos': 0.5615006509551771, 'vl_D_head_baseline_no_pos': 0.6747448979591837, 'l_D_head_baseline_no_pos': 0.6747448979591837, 'vl_D_neurons_baseline_no_pos': 0.6589555363589382, 'l_D_neurons_baseline_no_pos': 0.6589555363589382}
+2026-04-14 17:08:46 - INFO - Analysis complete

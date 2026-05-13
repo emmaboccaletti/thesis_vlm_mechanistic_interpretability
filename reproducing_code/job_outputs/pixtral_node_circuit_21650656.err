@@ -1,0 +1,20 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-08 08:49:21 - INFO - Running script_node_circuit_discovery_and_eval.py
+2026-04-08 08:49:21 - INFO - Loading model pixtral-12b from /home/eboccaletti/models/pixtral-12b
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:03<00:18,  3.76s/it]Loading checkpoint shards:  33%|███▎      | 2/6 [00:05<00:11,  2.83s/it]Loading checkpoint shards:  50%|█████     | 3/6 [00:08<00:07,  2.54s/it]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:10<00:04,  2.38s/it]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:14<00:02,  2.91s/it]Loading checkpoint shards: 100%|██████████| 6/6 [00:14<00:00,  2.06s/it]Loading checkpoint shards: 100%|██████████| 6/6 [00:14<00:00,  2.42s/it]
+/var/spool/slurm/slurmd/job21650656/slurm_script: line 41: 792266 Killed                  python script_node_circuit_discovery_and_eval.py --model_name pixtral-12b --model_path /home/eboccaletti/models/pixtral-12b --task_name counting --ap_ig_steps 1
+[2026-04-08T08:49:41.594] error: Detected 1 oom_kill event in StepId=21650656.batch. Some of the step tasks have been OOM Killed.

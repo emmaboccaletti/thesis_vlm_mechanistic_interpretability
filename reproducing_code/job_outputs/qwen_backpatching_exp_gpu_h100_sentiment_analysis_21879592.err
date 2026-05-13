@@ -1,0 +1,37 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 22:52:25 - INFO - Running script_backpatching_experiment.py
+2026-04-14 22:52:25 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:02<00:11,  2.99s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:04<00:05,  1.97s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:05<00:03,  1.63s/it]Loading checkpoint shards:  80%|████████  | 4/5 [00:06<00:01,  1.49s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.06s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.41s/it]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+2026-04-14 22:52:34 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 22:52:47 - INFO - Model loaded
+2026-04-14 22:52:47 - INFO - Loading dataset for task sentiment_analysis
+2026-04-14 22:52:51 - INFO - Split to 110 discovery prompts and 110 eval prompts
+2026-04-14 22:52:51 - INFO - Setting up counterfactuals for each prompt
+Traceback (most recent call last):
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_backpatching_experiment.py", line 559, in <module>
+    main()
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_backpatching_experiment.py", line 390, in main
+    l_prompts = get_parallel_l_prompts(vl_prompts, processor, args.task_name, args.seed)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/analysis_utils.py", line 481, in get_parallel_l_prompts
+    return load_sentiment_analysis_parallel_l_prompts(vl_prompts, processor)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/sentiment_analysis_utils.py", line 176, in load_sentiment_analysis_parallel_l_prompts
+    sentiment_json = json.load(open("./data/sentiment_analysis/sentiment_vl.json"))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: './data/sentiment_analysis/sentiment_vl.json'

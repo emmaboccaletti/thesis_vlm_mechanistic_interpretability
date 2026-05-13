@@ -1,0 +1,70 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-08 00:07:04 - INFO - Running script_node_circuit_discovery_and_eval.py
+2026-04-08 00:07:04 - INFO - Loading model pixtral-12b from /home/eboccaletti/models/pixtral-12b
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  5.85it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00, 15.65it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00, 18.44it/s]
+2026-04-08 00:07:14 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-08 00:07:48 - INFO - Model loaded
+2026-04-08 00:07:48 - INFO - Loading dataset for task counting
+2026-04-08 00:07:59 - INFO - Split to 161 discovery prompts and 54 eval prompts
+2026-04-08 00:07:59 - INFO - Setting up counterfactuals for each prompt
+  0%|          | 0/161 [00:00<?, ?it/s]Traceback (most recent call last):
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_node_circuit_discovery_and_eval.py", line 230, in <module>
+    main()
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_node_circuit_discovery_and_eval.py", line 212, in main
+    scores = node_attribution_patching_ig(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/attr_patching.py", line 47, in node_attribution_patching_ig
+    _, cf_cache = model.run_with_cache(vl_prompt.cf_prompt, vl_prompt.cf_images)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/third_party/TransformerLens/transformer_lens/HookedVLTransformer.py", line 856, in run_with_cache
+    out, cache_dict = super().run_with_cache(
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/third_party/TransformerLens/transformer_lens/hook_points.py", line 566, in run_with_cache
+    model_out = self(*model_args, **model_kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/third_party/TransformerLens/transformer_lens/HookedVLTransformer.py", line 649, in forward
+    image_outputs = self.vision_model(
+                    ^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/transformers/models/pixtral/modeling_pixtral.py", line 500, in forward
+    patch_embeds = self.patch_conv(pixel_values)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/conv.py", line 554, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env/lib/python3.11/site-packages/torch/nn/modules/conv.py", line 549, in _conv_forward
+    return F.conv2d(
+           ^^^^^^^^^
+RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (CUDABFloat16Type) should be the same
+  0%|          | 0/161 [00:00<?, ?it/s]

@@ -1,0 +1,46 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 17:48:16 - INFO - Running script_nodes_intersection_cross_modality_analysis.py
+2026-04-14 17:48:16 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:00<00:01,  3.21it/s]Loading checkpoint shards:  40%|████      | 2/5 [00:00<00:00,  5.28it/s]Loading checkpoint shards:  60%|██████    | 3/5 [00:00<00:00,  6.71it/s]Loading checkpoint shards:  80%|████████  | 4/5 [00:00<00:00,  7.56it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:00<00:00,  7.96it/s]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+2026-04-14 17:48:23 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 17:48:46 - INFO - Model loaded
+2026-04-14 17:48:46 - INFO - Loading dataset for task color_ordering
+2026-04-14 17:48:46 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:48:46 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:50:08 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:50:08 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:50:30 - INFO - Loading L-VL position mappings and verifying
+2026-04-14 17:50:30 - INFO - Analyzing cross-modality DQL interchange faithfulness
+2026-04-14 17:50:30 - INFO - Loading L and VL scores (discovery_metric='LD')
+2026-04-14 17:50:30 - INFO - Loading L and VL scores
+2026-04-14 17:50:30 - INFO - Analyzing eval_metric='LD'
+2026-04-14 17:51:50 - INFO - Calculating DV_QV_LV
+2026-04-14 18:05:15 - INFO - Calculating DL_QL_LL
+2026-04-14 18:09:47 - INFO - Calculating DV_QL_LV
+2026-04-14 18:22:41 - INFO - Calculating DV_QR_LV
+2026-04-14 18:35:20 - INFO - Calculating DV_QV_LL
+2026-04-14 18:49:02 - INFO - Calculating DV_QV_LR
+2026-04-14 19:02:41 - INFO - Calculating DL_QV_LL
+2026-04-14 19:08:08 - INFO - Calculating DL_QR_LL
+2026-04-14 19:12:55 - INFO - Calculating DL_QL_LV
+2026-04-14 19:17:52 - INFO - Calculating DL_QL_LR
+2026-04-14 19:22:42 - INFO - Calculating DL_QV_LV
+2026-04-14 19:36:54 - INFO - Calculating DR_QV_LV
+2026-04-14 19:50:03 - INFO - Calculating DV_QL_LL
+2026-04-14 19:56:14 - INFO - Calculating DR_QL_LL
+2026-04-14 19:59:59 - INFO - Analysis complete

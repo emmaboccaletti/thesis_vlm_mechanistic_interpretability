@@ -1,0 +1,31 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 19:24:21 - INFO - Running script_node_intersection.py
+2026-04-14 19:24:21 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:05<00:23,  5.93s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:08<00:11,  3.82s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:10<00:06,  3.17s/it]Loading checkpoint shards:  80%|████████  | 4/5 [00:12<00:02,  2.83s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:13<00:00,  2.02s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:13<00:00,  2.71s/it]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+2026-04-14 19:24:37 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 19:24:49 - INFO - Model loaded
+2026-04-14 19:24:49 - INFO - Loading dataset for task arithmetic
+2026-04-14 19:24:56 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 19:24:56 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 19:25:06 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 19:25:06 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 19:25:06 - INFO - Analyzing intersection of components
+2026-04-14 19:25:06 - INFO - Loading L and VL scores
+2026-04-14 19:25:06 - INFO - Loading L and VL scores
+2026-04-14 19:26:47 - INFO - {'l_percent': 0.01, 'vl_percent': 0.03, 'vl_head_iou': 0.16260334958660166, 'l_head_iou': 0.1500984251968504, 'vl_mlp_iou': 0.13848742100829925, 'l_mlp_iou': 0.14882940597727617, 'vl_head_baseline': 0.016837899543378994, 'vl_mlp_baseline': 0.015148061174913215, 'l_head_baseline': 0.01027221366204417, 'l_mlp_baseline': 0.009216398163191258, 'vl_D_head_iou': 0.07473928157589803, 'l_D_head_iou': 0.13398322375878485, 'vl_Q_head_iou': 0.296875, 'l_Q_head_iou': 0.296875, 'vl_G_head_iou': 0.6487603305785123, 'l_G_head_iou': 0.6487603305785123, 'vl_D_neurons_iou': 0.07319567071282197, 'l_D_neurons_iou': 0.11113596739282328, 'vl_Q_neurons_iou': 0.17134585349129558, 'l_Q_neurons_iou': 0.17134585349129558, 'vl_G_neurons_iou': 0.6561731825969368, 'l_G_neurons_iou': 0.6561731825969368, 'vl_D_head_baseline': 0.010439970171513796, 'l_D_head_baseline': 0.020189003436426118, 'vl_Q_head_baseline': 0.014104372355430184, 'l_Q_head_baseline': 0.014104372355430184, 'vl_G_head_baseline': 0.0, 'l_G_head_baseline': 0.0, 'vl_D_neurons_baseline': 0.009969222308247993, 'l_D_neurons_baseline': 0.01901140427965676, 'vl_Q_neurons_baseline': 0.007651550427899113, 'l_Q_neurons_baseline': 0.007651550427899113, 'vl_G_neurons_baseline': 0.007771275064760626, 'l_G_neurons_baseline': 0.007771275064760626, 'vl_D_head_iou_no_pos': 0.25925925925925924, 'l_D_head_iou_no_pos': 0.25925925925925924, 'vl_D_neurons_iou_no_pos': 0.2661026670490393, 'l_D_neurons_iou_no_pos': 0.2661026670490393, 'vl_D_head_baseline_no_pos': 0.04918032786885246, 'l_D_head_baseline_no_pos': 0.04918032786885246, 'vl_D_neurons_baseline_no_pos': 0.04797448730030205, 'l_D_neurons_baseline_no_pos': 0.04797448730030205}
+2026-04-14 19:26:47 - INFO - Analysis complete

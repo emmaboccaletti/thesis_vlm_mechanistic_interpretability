@@ -1,0 +1,45 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 17:50:54 - INFO - Running script_nodes_intersection_cross_modality_analysis.py
+2026-04-14 17:50:54 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:00<00:01,  2.24it/s]Loading checkpoint shards:  60%|██████    | 3/5 [00:00<00:00,  5.70it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:00<00:00,  7.21it/s]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+2026-04-14 17:51:11 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 17:51:44 - INFO - Model loaded
+2026-04-14 17:51:44 - INFO - Loading dataset for task factual_recall
+2026-04-14 17:51:44 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:51:44 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:51:51 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:51:51 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:52:13 - INFO - Loading L-VL position mappings and verifying
+2026-04-14 17:52:13 - INFO - Analyzing cross-modality DQL interchange faithfulness
+2026-04-14 17:52:13 - INFO - Loading L and VL scores (discovery_metric='LD')
+2026-04-14 17:52:13 - INFO - Loading L and VL scores
+Traceback (most recent call last):
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_node_cross_modality_analysis.py", line 507, in <module>
+    main()
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_node_cross_modality_analysis.py", line 494, in main
+    analyze_cross_modality_DQL_interchange_faithfulness(
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_node_cross_modality_analysis.py", line 119, in analyze_cross_modality_DQL_interchange_faithfulness
+    limited_labels = get_limited_labels_for_task(args.task_name, model)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/analysis_utils.py", line 466, in get_limited_labels_for_task
+    labels = get_factual_recall_limited_labels(None, model.processor)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/factual_recall_utils.py", line 235, in get_factual_recall_limited_labels
+    entity_json = json.load(open(os.path.join(RAW_DATA_JSON_PATH), "r"))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: './data/factual_recall/qa_raw.json'

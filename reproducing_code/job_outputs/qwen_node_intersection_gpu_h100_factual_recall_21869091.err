@@ -1,0 +1,43 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 17:02:59 - INFO - Running script_node_intersection.py
+2026-04-14 17:02:59 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:02<00:11,  2.96s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:04<00:06,  2.01s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:05<00:03,  1.68s/it]Loading checkpoint shards:  80%|████████  | 4/5 [00:07<00:01,  1.62s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.16s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.49s/it]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:08 - WARNING - HTTP Error 503 thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 1s [Retry 1/5].
+2026-04-14 17:03:08 - WARNING - Retrying in 1s [Retry 1/5].
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 3cdf40eb-fdf2-4778-a0c0-82b8fbd529a9)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:19 - WARNING - '(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 3cdf40eb-fdf2-4778-a0c0-82b8fbd529a9)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 2s [Retry 2/5].
+2026-04-14 17:03:19 - WARNING - Retrying in 2s [Retry 2/5].
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: bc2ce093-336a-4183-a5b3-1ea4d66ba2ad)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+2026-04-14 17:03:31 - WARNING - '(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: bc2ce093-336a-4183-a5b3-1ea4d66ba2ad)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct/resolve/main/config.json
+Retrying in 4s [Retry 3/5].
+2026-04-14 17:03:31 - WARNING - Retrying in 4s [Retry 3/5].
+2026-04-14 17:03:37 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 17:03:50 - INFO - Model loaded
+2026-04-14 17:03:50 - INFO - Loading dataset for task factual_recall
+2026-04-14 17:03:57 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:03:57 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:04:19 - INFO - Split to 187 discovery prompts and 63 eval prompts
+2026-04-14 17:04:19 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 17:04:19 - INFO - Analyzing intersection of components
+2026-04-14 17:04:19 - INFO - Loading L and VL scores
+2026-04-14 17:04:19 - INFO - Loading L and VL scores
+2026-04-14 17:07:52 - INFO - {'l_percent': 0.05, 'vl_percent': 0.08, 'vl_head_iou': 0.08018596625766872, 'l_head_iou': 0.16208597603946442, 'vl_mlp_iou': 0.07389430157883183, 'l_mlp_iou': 0.19711546738662597, 'vl_head_baseline': 0.0566978513416264, 'vl_mlp_baseline': 0.05469804827134684, 'l_head_baseline': 0.04255984978876545, 'l_mlp_baseline': 0.04077672687174136, 'vl_D_head_iou': 0.2346857597454256, 'l_D_head_iou': 0.07293146425795384, 'vl_Q_head_iou': 0.07605263157894737, 'l_Q_head_iou': 0.07605263157894737, 'vl_G_head_iou': 0.5428109854604201, 'l_G_head_iou': 0.5428109854604201, 'vl_D_neurons_iou': 0.3964894869082786, 'l_D_neurons_iou': 0.07163250475506348, 'vl_Q_neurons_iou': 0.03083532912535461, 'l_Q_neurons_iou': 0.03083532912535461, 'vl_G_neurons_iou': 0.48767520180410256, 'l_G_neurons_iou': 0.48767520180410256, 'vl_D_head_baseline': 0.050701530612244895, 'l_D_head_baseline': 0.060604184722050265, 'vl_Q_head_baseline': 0.03361344537815126, 'l_Q_head_baseline': 0.03361344537815126, 'vl_G_head_baseline': 0.054945054945054944, 'l_G_head_baseline': 0.054945054945054944, 'vl_D_neurons_baseline': 0.05008473264867844, 'l_D_neurons_baseline': 0.05877641693869721, 'vl_Q_neurons_baseline': 0.03194485621108805, 'l_Q_neurons_baseline': 0.03194485621108805, 'vl_G_neurons_baseline': 0.03258930579082283, 'l_G_neurons_baseline': 0.03258930579082283, 'vl_D_head_iou_no_pos': 0.3459915611814346, 'l_D_head_iou_no_pos': 0.3459915611814346, 'vl_D_neurons_iou_no_pos': 0.6331342585056161, 'l_D_neurons_iou_no_pos': 0.6331342585056161, 'vl_D_head_baseline_no_pos': 0.1875, 'l_D_head_baseline_no_pos': 0.1875, 'vl_D_neurons_baseline_no_pos': 0.18593092829607658, 'l_D_neurons_baseline_no_pos': 0.18593092829607658}
+2026-04-14 17:07:52 - INFO - Analysis complete

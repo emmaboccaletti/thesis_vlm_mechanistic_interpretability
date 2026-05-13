@@ -1,0 +1,34 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 22:49:52 - INFO - Running script_backpatching_experiment.py
+2026-04-14 22:49:52 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:02<00:11,  2.91s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:04<00:05,  1.99s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:05<00:03,  1.72s/it]Loading checkpoint shards:  80%|████████  | 4/5 [00:07<00:01,  1.59s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.14s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.48s/it]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+2026-04-14 22:50:02 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 22:50:15 - INFO - Model loaded
+2026-04-14 22:50:15 - INFO - Loading dataset for task color_ordering
+2026-04-14 22:51:10 - INFO - Split to 125 discovery prompts and 125 eval prompts
+2026-04-14 22:51:10 - INFO - Setting up counterfactuals for each prompt
+2026-04-14 22:51:31 - INFO - Loaded 1925 VL prompts and 1925 L prompts
+2026-04-14 22:51:31 - INFO - Filtering bad sequence lengths
+2026-04-14 22:51:32 - INFO - Most common sequence length: 64
+2026-04-14 22:51:32 - INFO - Post filter: 1925 L prompts and 1925 VL prompts
+2026-04-14 22:51:32 - INFO - Running baseline
+2026-04-14 22:58:00 - INFO - Unpatched acc: 0.742; Unpatched Control acc: 0.870)
+2026-04-14 22:58:00 - INFO - Running backpatching for layer_window_size=5, repeat_processing_in_data_positions=True
+2026-04-14 22:58:00 - INFO - Backpatching 13 -> 0
+/var/spool/slurm/slurmd/job21879554/slurm_script: line 35: 659035 Killed                  python script_backpatching_experiment.py --model_name qwen2-7b-vl-instruct --model_path /home/eboccaletti/models/qwen2vl7b --task_name color_ordering --src_layer_range 13 26 --dst_layer_range 0 16
+[2026-04-14T22:58:05.165] error: Detected 1 oom_kill event in StepId=21879554.batch. Some of the step tasks have been OOM Killed.

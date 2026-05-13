@@ -1,0 +1,45 @@
+=== Gemma node circuit: sentiment_analysis job ===
+Host: gcn154.local.snellius.surf.nl
+Start time: Wed Apr 15 05:55:27 CEST 2026
+Working dir: /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+CUDA_VISIBLE_DEVICES=0,1,2,3
+Wed Apr 15 05:55:27 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100                    On  |   00000000:06:00.0 Off |                    0 |
+| N/A   33C    P0             66W /  700W |       0MiB /  95830MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA H100                    On  |   00000000:26:00.0 Off |                    0 |
+| N/A   33C    P0             66W /  700W |       0MiB /  95830MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   2  NVIDIA H100                    On  |   00000000:A6:00.0 Off |                    0 |
+| N/A   34C    P0             65W /  700W |       0MiB /  95830MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   3  NVIDIA H100                    On  |   00000000:C6:00.0 Off |                    0 |
+| N/A   33C    P0             66W /  700W |       0MiB /  95830MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+The third_partyTransformerLens imported successfully on first try
+System path: /gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/third_party/TransformerLens
+using gemma3 when loading model
+entering the use_tlens_wrapper block for gemma3
+Detected 4 GPUs.
+Loaded pretrained model gemma-3-12b-it into HookedVLTransformer
+This is the data I am using: ./data/sentiment_analysis/gemma-3-12b-it_visual_data.csv
+End time: Wed Apr 15 23:52:27 CEST 2026

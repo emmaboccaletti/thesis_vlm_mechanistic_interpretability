@@ -1,0 +1,37 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+2026-04-14 22:50:51 - INFO - Running script_backpatching_experiment.py
+2026-04-14 22:50:51 - INFO - Loading model qwen2-7b-vl-instruct from /home/eboccaletti/models/qwen2vl7b
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:02<00:11,  2.91s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:04<00:05,  1.98s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:05<00:03,  1.66s/it]Loading checkpoint shards:  80%|████████  | 4/5 [00:06<00:01,  1.50s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.07s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.42s/it]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+2026-04-14 22:51:01 - WARNING - You are not using LayerNorm, so the writing weights can't be centered! Skipping
+2026-04-14 22:51:14 - INFO - Model loaded
+2026-04-14 22:51:14 - INFO - Loading dataset for task factual_recall
+2026-04-14 22:51:23 - INFO - Split to 125 discovery prompts and 125 eval prompts
+2026-04-14 22:51:23 - INFO - Setting up counterfactuals for each prompt
+Traceback (most recent call last):
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_backpatching_experiment.py", line 559, in <module>
+    main()
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/script_backpatching_experiment.py", line 390, in main
+    l_prompts = get_parallel_l_prompts(vl_prompts, processor, args.task_name, args.seed)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/analysis_utils.py", line 483, in get_parallel_l_prompts
+    return load_factual_recall_parallel_l_prompts(vl_prompts, processor)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home5/eboccaletti/reproducing_code/vlm-circuits-analysis/factual_recall_utils.py", line 177, in load_factual_recall_parallel_l_prompts
+    entity_json = json.load(open(os.path.join(RAW_DATA_JSON_PATH), "r"))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: './data/factual_recall/qa_raw.json'
