@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=4
+#SBATCH --job-name=Gemma_Larithmetic_NodeCircuit_gpu_h100_24h
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/gemma_node_circuit_gpu_h100_24h_Larithmetic_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/gemma_node_circuit_gpu_h100_24h_Larithmetic_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=24:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+# Activate your environment
+source activate vlm_qwen_reproducing_env
+
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Gemma node circuit: arithmetic job -- language only ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+echo "Working dir: $(pwd)"
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
+nvidia-smi || true
+
+python script_node_circuit_discovery_and_eval.py \
+  --model_name gemma-3-12b-it \
+  --model_path /home/eboccaletti/models/gemma3_12b_it \
+  --task_name arithmetic \
+  --ap_ig_steps 5 \
+  --language_only
+
+echo "End time: $(date)"
