@@ -2,8 +2,8 @@
 Parse category_annotations.json into a clean annotation CSV.
 
 Creates:
-  goals_annotation.csv  — GOAL IMs (positive) vs. non-GOAL IMs (negative)
-  important_annotation.csv — all IMs (positive) vs. all NIMs (negative)
+  goals_annotation_only_IM.csv  — GOAL IMs (positive) vs. non-GOAL IMs (negative)
+  category_annotation.csv — all IMs (positive) vs. all NIMs (negative)
 
 Usage:
   python parse_category_annotations.py \
@@ -54,7 +54,7 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    # --- goals_annotation.csv ---
+    # --- goals_annotation_only_IM.csv ---
     goal_ims = {entry for entry in data.get("GOAL", {}).get("IMs", [])}
     other_ims = {
         entry
@@ -82,7 +82,7 @@ def main():
             "label": "not_goal",
         })
 
-    goal_csv = os.path.join(args.output_dir, "goals_annotation.csv")
+    goal_csv = os.path.join(args.output_dir, "goals_annotation_only_IM.csv")
     with open(goal_csv, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=[
             "clip_id", "group_idx", "clip_name", "event_type", "mp4_path", "label"
@@ -93,10 +93,10 @@ def main():
 
     n_goals    = sum(1 for r in rows if r["label"] == "goal")
     n_not_goal = sum(1 for r in rows if r["label"] == "not_goal")
-    print(f"goals_annotation.csv → {n_goals} goals, {n_not_goal} non-goals")
+    print(f"goals_annotation_only_IM.csv → {n_goals} goals, {n_not_goal} non-goals")
     print(f"  Saved to: {goal_csv}\n")
 
-    # --- important_annotation.csv (all IMs vs all NIMs) ---
+    # --- category_annotation.csv (all IMs vs all NIMs) ---
     im_rows, nim_rows = [], []
     for cat, entries in data.items():
         for entry in entries.get("IMs", []):
@@ -116,7 +116,7 @@ def main():
                 "label": "not_important",
             })
 
-    imp_csv = os.path.join(args.output_dir, "important_annotation.csv")
+    imp_csv = os.path.join(args.output_dir, "category_annotation.csv")
     with open(imp_csv, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=[
             "clip_id", "group_idx", "clip_name", "event_type", "mp4_path", "label"
@@ -124,7 +124,7 @@ def main():
         writer.writeheader()
         writer.writerows({k: r[k] for k in writer.fieldnames} for r in im_rows + nim_rows)
 
-    print(f"important_annotation.csv → {len(im_rows)} IMs, {len(nim_rows)} NIMs")
+    print(f"category_annotation.csv → {len(im_rows)} IMs, {len(nim_rows)} NIMs")
     print(f"  Saved to: {imp_csv}")
 
 
