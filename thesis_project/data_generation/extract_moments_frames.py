@@ -6,13 +6,13 @@ Output structure:
 
 Usage:
   python extract_moments_frames.py \
-      --annotation_csv ~/thesis_project/data/MOMENTS_categories/goals_annotation.csv \
+      --annotation_csv ~/thesis_project/data/MOMENTS_categories/goals_annotation_only_IM.csv \
       --moments_dir    ~/thesis_project/data/MOMENTS \
       --output_dir     ~/thesis_project/data/MOMENTS/frames \
       --n_frames 10
 
   # To extract for multiple CSVs at once, pass them comma-separated:
-  --annotation_csv goals_annotation.csv,important_annotation.csv
+  --annotation_csv goals_annotation_only_IM.csv,category_annotation.csv
 """
 
 import argparse
