@@ -35,6 +35,8 @@ from PIL import Image, ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 QUESTION_BY_TASK = {
     "goal": "Is this a goal? Answer yes or no.",
@@ -838,7 +840,8 @@ def build_clean_record(
     frame_dir, clip_id, clip_type, group_idx, clip_name = build_frame_root(
         resolve_path(frames_root), mp4_path
     )
-    frame_paths = parse_frame_paths(frame_dir, n_frames=n_frames)
+    frame_paths_abs = parse_frame_paths(frame_dir, n_frames=n_frames)
+    frame_paths = [to_repo_relative_path(path) for path in frame_paths_abs]
 
     label = row["label"].strip().lower()
     event_type = row["event_type"].strip()
@@ -861,7 +864,8 @@ def build_clean_record(
         "prompt": prompt,
         "image_paths": "|".join(frame_paths),
         "answer": answer,
-        "_frame_paths": frame_paths,
+        "_frame_paths": frame_paths_abs,
+        "_frame_paths_rel": frame_paths,
         "_sample_id": sample_id,
     }
 
@@ -872,6 +876,28 @@ def maybe_absolute(path: str, base_dir: str) -> str:
     if os.path.isabs(path):
         return path
     return str(Path(base_dir) / path)
+
+
+def to_repo_relative_path(path: str) -> str:
+    """
+    Store paths relative to the repository root whenever possible.
+
+    This keeps the CSV portable across local and Snellius checkouts. If the
+    path does not live under the repo root, fall back to stripping a leading
+    slash so manually normalized paths like `/thesis_project/...` still become
+    portable relative paths.
+    """
+    if not path:
+        return path
+
+    path_obj = Path(path)
+    if not path_obj.is_absolute():
+        return str(path_obj)
+
+    try:
+        return str(path_obj.resolve().relative_to(REPO_ROOT))
+    except Exception:
+        return path.lstrip(os.sep)
 
 
 def build_sample_record(
@@ -908,6 +934,7 @@ def build_sample_record(
     prompt = str(clean_record["prompt"])
     answer = str(clean_record["answer"])
     frame_paths = list(clean_record["_frame_paths"])  # type: ignore[index]
+    frame_paths_rel = list(clean_record["_frame_paths_rel"])  # type: ignore[index]
     sample_id = str(clean_record["_sample_id"])
     cf_answer = get_cf_answer(task, answer, sample_id, mode)
     cf_prompt = ""
@@ -943,9 +970,9 @@ def build_sample_record(
             output_dir=output_dir,
             noise_sigma=noise_sigma,
         )
-        cf_image_paths = "|".join(noisy_paths)
+        cf_image_paths = "|".join(to_repo_relative_path(path) for path in noisy_paths)
     elif mode == "language_only":
-        cf_image_paths = "|".join(frame_paths)
+        cf_image_paths = "|".join(frame_paths_rel)
     elif mode == "random_pair":
         cf_image_paths = ""
 
@@ -959,7 +986,7 @@ def build_sample_record(
         "local_text": local_text,
         "global_text": global_text,
         "prompt": prompt,
-        "image_paths": "|".join(frame_paths),
+        "image_paths": "|".join(frame_paths_rel),
         "answer": answer,
         "cf_mode": mode,
         "cf_prompt": cf_prompt,
