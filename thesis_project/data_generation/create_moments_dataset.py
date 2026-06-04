@@ -14,9 +14,10 @@ For each task variant, it writes four CSVs:
   - vision_only
   - both
 
-The clean sample is always the original frame sequence.
-The perturbation-based counterfactual uses the same frame sequence with
-visual Gaussian noise applied.
+The clean sample is always a single horizontal composite image built from the
+ordered frame sequence.
+The perturbation-based counterfactual uses the same clip representation with
+visual Gaussian noise applied to the constituent frames before composition.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ from functools import lru_cache
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
-from PIL import Image, ImageFile
+from PIL import Image, ImageFile, ImageOps
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -138,6 +139,10 @@ CSV_COLUMNS = [
     "cf_prompt_changes",
 ]
 
+COMPOSITE_TILE_SIZE = 160
+COMPOSITE_SEPARATOR_PX = 4
+COMPOSITE_BACKGROUND = (0, 0, 0)
+
 
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[2]
@@ -196,6 +201,19 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=0,
         help="If > 0, only process the first N annotation rows for a local subset run.",
+    )
+    parser.add_argument(
+        "--no_write_noisy_frames",
+        action="store_true",
+        help="Do not write noisy PNGs; only emit CSV rows that point to the expected noisy-frame paths.",
+    )
+    parser.add_argument(
+        "--noisy_frames_root",
+        default="",
+        help=(
+            "Optional root directory to use when constructing noisy-frame paths. "
+            "Useful when you want the CSVs to point to an existing noisy-frame tree."
+        ),
     )
     return parser.parse_args()
 
@@ -755,7 +773,62 @@ def get_cf_answer(task: str, answer: str, sample_id: str, mode: str) -> str:
     raise ValueError(f"Unknown MOMENTS task: {task}")
 
 
-def build_shared_vision_noisy_paths(
+def _fit_frame_into_tile(image: Image.Image, tile_size: int) -> Image.Image:
+    """
+    Resize a frame while preserving aspect ratio, then center it on a square tile.
+    """
+    resample = getattr(Image, "Resampling", Image).LANCZOS
+    fitted = ImageOps.contain(image, (tile_size, tile_size), method=resample)
+    canvas = Image.new("RGB", (tile_size, tile_size), COMPOSITE_BACKGROUND)
+    offset = ((tile_size - fitted.width) // 2, (tile_size - fitted.height) // 2)
+    canvas.paste(fitted, offset)
+    return canvas
+
+
+def build_horizontal_composite(
+    *,
+    frame_paths: Sequence[str],
+    output_path: str,
+    noise_sigma: Optional[float] = None,
+    seed_prefix: Sequence[str] = (),
+    tile_size: int = COMPOSITE_TILE_SIZE,
+    separator_px: int = COMPOSITE_SEPARATOR_PX,
+    write_image: bool = True,
+) -> str:
+    """
+    Build one ordered horizontal strip from a clip's frames.
+
+    If noise_sigma is provided, Gaussian noise is applied to each frame before
+    composition. The same composite is used as the single visual input for the
+    clip.
+    """
+    if not frame_paths:
+        raise ValueError("frame_paths must be non-empty")
+
+    tiles: List[Image.Image] = []
+    for idx, frame_path in enumerate(frame_paths):
+        img = load_image(frame_path)
+        if noise_sigma is not None:
+            seed = sample_seed(*seed_prefix, str(idx))
+            img = apply_gaussian_noise(img, sigma=noise_sigma, seed=seed)
+        tiles.append(_fit_frame_into_tile(img, tile_size))
+
+    width = len(tiles) * tile_size + max(0, len(tiles) - 1) * separator_px
+    composite = Image.new("RGB", (width, tile_size), COMPOSITE_BACKGROUND)
+    for idx, tile in enumerate(tiles):
+        x = idx * (tile_size + separator_px)
+        composite.paste(tile, (x, 0))
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if write_image and not os.path.exists(output_path):
+        composite.save(output_path)
+    elif write_image:
+        # Preserve the existing artifact if it is already present.
+        pass
+    return output_path
+
+
+def build_shared_vision_noisy_composite_path(
     *,
     task: str,
     clip_id: str,
@@ -765,32 +838,66 @@ def build_shared_vision_noisy_paths(
     frame_paths: Sequence[str],
     output_dir: str,
     noise_sigma: float,
-) -> List[str]:
+    write_noisy_frames: bool = True,
+    noisy_frames_root: str = "",
+) -> str:
     """
-    Build a shared noisy version of the clean frame sequence.
+    Build a shared noisy version of the clean composite strip.
 
     The same noisy frames are reused by `vision_only` and `both`, so those two
-    CSVs can point to identical corrupted frames.
+    CSVs can point to identical corrupted composites.
     """
     sigma_tag = str(noise_sigma).replace(".", "p")
-    noisy_dir = (
-        Path(output_dir)
+    noisy_base = Path(noisy_frames_root) if noisy_frames_root else Path(output_dir)
+    noisy_path = (
+        noisy_base
         / task
-        / f"frames_noisy_sigma{sigma_tag}"
+        / f"composites_noisy_sigma{sigma_tag}"
         / clip_id
         / clip_type
         / group_idx
-        / clip_name
+        / f"{clip_name}.png"
     )
-    noisy_paths: List[str] = []
-    for idx, frame_path in enumerate(frame_paths):
-        noisy_path = noisy_dir / f"frame_{idx:02d}.png"
-        if not noisy_path.exists():
-            img = load_image(frame_path)
-            seed = sample_seed(task, clip_id, clip_type, group_idx, clip_name, str(idx))
-            save_noisy_frame(img, str(noisy_path), sigma=noise_sigma, seed=seed)
-        noisy_paths.append(str(noisy_path))
-    return noisy_paths
+    if write_noisy_frames and not noisy_path.exists():
+        build_horizontal_composite(
+            frame_paths=frame_paths,
+            output_path=str(noisy_path),
+            noise_sigma=noise_sigma,
+            seed_prefix=(task, clip_id, clip_type, group_idx, clip_name),
+            write_image=True,
+        )
+    return str(noisy_path)
+
+
+def build_clean_composite_path(
+    *,
+    task: str,
+    clip_id: str,
+    clip_type: str,
+    group_idx: str,
+    clip_name: str,
+    frame_paths: Sequence[str],
+    output_dir: str,
+    write_image: bool = True,
+) -> str:
+    clean_path = (
+        Path(output_dir)
+        / task
+        / "composites"
+        / clip_id
+        / clip_type
+        / group_idx
+        / f"{clip_name}.png"
+    )
+    if write_image and not clean_path.exists():
+        build_horizontal_composite(
+            frame_paths=frame_paths,
+            output_path=str(clean_path),
+            noise_sigma=None,
+            seed_prefix=(),
+            write_image=True,
+        )
+    return str(clean_path)
 
 
 def build_frame_root(
@@ -817,6 +924,7 @@ def build_clean_record(
     task: str,
     row: Dict[str, str],
     frames_root: str,
+    output_dir: str,
     similarity_threshold: float,
     n_frames: int,
 ) -> Optional[Dict[str, object]]:
@@ -841,7 +949,16 @@ def build_clean_record(
         resolve_path(frames_root), mp4_path
     )
     frame_paths_abs = parse_frame_paths(frame_dir, n_frames=n_frames)
-    frame_paths = [to_repo_relative_path(path) for path in frame_paths_abs]
+    composite_path_abs = build_clean_composite_path(
+        task=task,
+        clip_id=clip_id,
+        clip_type=clip_type,
+        group_idx=group_idx,
+        clip_name=clip_name,
+        frame_paths=frame_paths_abs,
+        output_dir=output_dir,
+        write_image=True,
+    )
 
     label = row["label"].strip().lower()
     event_type = row["event_type"].strip()
@@ -862,10 +979,10 @@ def build_clean_record(
         "local_text": local_text,
         "global_text": global_text,
         "prompt": prompt,
-        "image_paths": "|".join(frame_paths),
+        "image_paths": to_repo_relative_path(composite_path_abs),
         "answer": answer,
         "_frame_paths": frame_paths_abs,
-        "_frame_paths_rel": frame_paths,
+        "_clean_composite_path": composite_path_abs,
         "_sample_id": sample_id,
     }
 
@@ -909,6 +1026,8 @@ def build_sample_record(
     output_dir: str,
     n_frames: int,
     noise_sigma: float,
+    write_noisy_frames: bool,
+    noisy_frames_root: str,
     mode: str,
     similarity_threshold: float,
 ) -> Optional[Dict[str, str]]:
@@ -916,6 +1035,7 @@ def build_sample_record(
         task=task,
         row=row,
         frames_root=frames_root,
+        output_dir=output_dir,
         similarity_threshold=similarity_threshold,
         n_frames=n_frames,
     )
@@ -934,8 +1054,8 @@ def build_sample_record(
     prompt = str(clean_record["prompt"])
     answer = str(clean_record["answer"])
     frame_paths = list(clean_record["_frame_paths"])  # type: ignore[index]
-    frame_paths_rel = list(clean_record["_frame_paths_rel"])  # type: ignore[index]
     sample_id = str(clean_record["_sample_id"])
+    clean_composite_path = str(clean_record["_clean_composite_path"])
     cf_answer = get_cf_answer(task, answer, sample_id, mode)
     cf_prompt = ""
     cf_image_paths = ""
@@ -960,7 +1080,7 @@ def build_sample_record(
         raise ValueError(f"Unknown MOMENTS mode: {mode}")
 
     if mode in {"vision_only", "both"}:
-        noisy_paths = build_shared_vision_noisy_paths(
+        noisy_path = build_shared_vision_noisy_composite_path(
             task=task,
             clip_id=clip_id,
             clip_type=clip_type,
@@ -969,10 +1089,12 @@ def build_sample_record(
             frame_paths=frame_paths,
             output_dir=output_dir,
             noise_sigma=noise_sigma,
+            write_noisy_frames=write_noisy_frames,
+            noisy_frames_root=noisy_frames_root,
         )
-        cf_image_paths = "|".join(to_repo_relative_path(path) for path in noisy_paths)
+        cf_image_paths = to_repo_relative_path(noisy_path)
     elif mode == "language_only":
-        cf_image_paths = "|".join(frame_paths_rel)
+        cf_image_paths = to_repo_relative_path(clean_composite_path)
     elif mode == "random_pair":
         cf_image_paths = ""
 
@@ -986,7 +1108,7 @@ def build_sample_record(
         "local_text": local_text,
         "global_text": global_text,
         "prompt": prompt,
-        "image_paths": "|".join(frame_paths_rel),
+        "image_paths": to_repo_relative_path(clean_composite_path),
         "answer": answer,
         "cf_mode": mode,
         "cf_prompt": cf_prompt,
@@ -1061,6 +1183,7 @@ def main() -> None:
             task=args.task,
             row=row,
             frames_root=args.frames_root,
+            output_dir=args.output_dir,
             similarity_threshold=args.similarity_threshold,
             n_frames=args.n_frames,
         )
@@ -1077,6 +1200,8 @@ def main() -> None:
                 output_dir=args.output_dir,
                 n_frames=args.n_frames,
                 noise_sigma=args.noise_sigma,
+                write_noisy_frames=not args.no_write_noisy_frames,
+                noisy_frames_root=args.noisy_frames_root,
                 mode=mode,
                 similarity_threshold=args.similarity_threshold,
             )
