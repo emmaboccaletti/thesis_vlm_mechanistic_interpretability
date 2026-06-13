@@ -240,6 +240,25 @@ def parse_args() -> argparse.Namespace:
             "using extracted PNG frames when available."
         ),
     )
+    parser.add_argument(
+        "--random_pair_length_mode",
+        choices=("off", "heuristic", "qwen"),
+        default="heuristic",
+        help=(
+            "How to constrain random_pair construction: off keeps the old "
+            "answer-only pairing, heuristic buckets by prompt word count, and "
+            "qwen buckets by exact tokenized length using a processor."
+        ),
+    )
+    parser.add_argument(
+        "--pairing_model_path",
+        default="",
+        help=(
+            "HF model path used to measure exact tokenized prompt lengths for "
+            "random_pair construction. Required when "
+            "--random_pair_length_mode qwen is set."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -1396,6 +1415,146 @@ def build_random_pair_record(
     }
 
 
+@lru_cache(maxsize=1)
+def load_pairing_processor(model_path: str):
+    from transformers import AutoProcessor
+
+    return AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+
+
+def _pairing_prompt_token_length(
+    processor,
+    prompt_text: str,
+    composite_path: str,
+) -> int:
+    """
+    Measure the tokenized length of a MOMENTS prompt using the same Qwen-style
+    chat template path that the analysis loader applies.
+    """
+    with Image.open(composite_path) as image:
+        image = image.convert("RGB")
+        if hasattr(processor, "apply_chat_template"):
+            messages = [
+                {
+                    "role": "user",
+                    "content": [{"type": "image"}] + [{"type": "text", "text": prompt_text}],
+                }
+            ]
+            prompt = processor.apply_chat_template(messages, add_generation_prompt=True)
+        else:
+            prompt = prompt_text
+        inputs = processor(
+            [image],
+            prompt,
+            return_tensors="pt",
+            padding=True,
+            truncation=False,
+        )
+    return int(inputs["input_ids"].shape[1])
+
+
+def _pairing_heuristic_length(prompt_text: str) -> int:
+    """
+    Cheap proxy for prompt length when we do not want to load a processor.
+
+    We use whitespace token count as a local approximation to the eventual
+    model-side sequence length.
+    """
+    return len(str(prompt_text).split())
+
+
+def _record_pairing_length(record: Dict[str, object], length_mode: str) -> Optional[int]:
+    if length_mode == "qwen":
+        return record.get("_pairing_token_length")  # type: ignore[return-value]
+    if length_mode == "heuristic":
+        return record.get("_pairing_heuristic_length")  # type: ignore[return-value]
+    return None
+
+
+def build_random_pair_rows(
+    *,
+    task: str,
+    clean_records: List[Dict[str, object]],
+    length_mode: str,
+) -> Tuple[List[Dict[str, str]], Dict[str, int]]:
+    """
+    Build MOMENTS random-pair rows from clean records.
+
+    The pairing strategy can either be the legacy answer-only pairing or a
+    length-bucketed variant based on heuristic or exact tokenized lengths.
+    """
+    stats = {
+        "kept": 0,
+        "dropped_no_candidate": 0,
+        "dropped_self_pair": 0,
+        "same_length_candidates": 0,
+    }
+    random_pair_rows: List[Dict[str, str]] = []
+
+    if length_mode in {"heuristic", "qwen"}:
+        length_buckets: Dict[Tuple[str, int], List[Dict[str, object]]] = {}
+        for record in clean_records:
+            pairing_length = _record_pairing_length(record, length_mode)
+            if pairing_length is None:
+                continue
+            key = (str(record["answer"]), int(pairing_length))
+            length_buckets.setdefault(key, []).append(record)
+
+        for record in clean_records:
+            answer = str(record["answer"])
+            pairing_length = _record_pairing_length(record, length_mode)
+            if pairing_length is None:
+                stats["dropped_no_candidate"] += 1
+                continue
+            other_answer = "no" if answer == "yes" else "yes"
+            candidates = length_buckets.get((other_answer, int(pairing_length)), [])
+            stats["same_length_candidates"] += len(candidates)
+            if not candidates:
+                stats["dropped_no_candidate"] += 1
+                continue
+            sample_id = str(record["_sample_id"])
+            pair_idx = sample_seed(task, "random_pair", sample_id) % len(candidates)
+            paired = candidates[pair_idx]
+            if paired["_sample_id"] == record["_sample_id"] and len(candidates) > 1:
+                pair_idx = (pair_idx + 1) % len(candidates)
+                paired = candidates[pair_idx]
+            if paired["_sample_id"] == record["_sample_id"]:
+                stats["dropped_self_pair"] += 1
+                continue
+            random_pair_rows.append(
+                build_random_pair_record(task=task, clean_record=record, paired_record=paired)
+            )
+            stats["kept"] += 1
+        return random_pair_rows, stats
+
+    answer_to_records: Dict[str, List[Dict[str, object]]] = {}
+    for record in clean_records:
+        answer_to_records.setdefault(str(record["answer"]), []).append(record)
+
+    for record in clean_records:
+        answer = str(record["answer"])
+        other_answer = "no" if answer == "yes" else "yes"
+        candidates = answer_to_records.get(other_answer, [])
+        if not candidates:
+            stats["dropped_no_candidate"] += 1
+            continue
+        sample_id = str(record["_sample_id"])
+        pair_idx = sample_seed(task, "random_pair", sample_id) % len(candidates)
+        paired = candidates[pair_idx]
+        if paired["_sample_id"] == record["_sample_id"] and len(candidates) > 1:
+            pair_idx = (pair_idx + 1) % len(candidates)
+            paired = candidates[pair_idx]
+        if paired["_sample_id"] == record["_sample_id"]:
+            stats["dropped_self_pair"] += 1
+            continue
+        random_pair_rows.append(
+            build_random_pair_record(task=task, clean_record=record, paired_record=paired)
+        )
+        stats["kept"] += 1
+
+    return random_pair_rows, stats
+
+
 def write_csv(path: str, rows: Sequence[Dict[str, str]]) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", newline="") as f:
@@ -1422,6 +1581,13 @@ def main() -> None:
         "vision_only": [],
         "both": [],
     }
+    pairing_processor = None
+    if args.random_pair_length_mode == "qwen":
+        if not args.pairing_model_path:
+            raise ValueError(
+                "--pairing_model_path is required when --random_pair_length_mode qwen is set"
+            )
+        pairing_processor = load_pairing_processor(args.pairing_model_path)
 
     for row in annotations:
         clean_record = build_clean_record(
@@ -1432,9 +1598,19 @@ def main() -> None:
             similarity_threshold=args.similarity_threshold,
             n_frames=args.n_frames,
             prefer_mp4=args.prefer_mp4,
-        )
+            )
         if clean_record is None:
             continue
+        if args.random_pair_length_mode == "qwen" and pairing_processor is not None:
+            clean_record["_pairing_token_length"] = _pairing_prompt_token_length(
+                pairing_processor,
+                str(clean_record["prompt"]),
+                str(clean_record["_clean_composite_path"]),
+            )
+        if args.random_pair_length_mode == "heuristic":
+            clean_record["_pairing_heuristic_length"] = _pairing_heuristic_length(
+                str(clean_record["prompt"])
+            )
         clean_records.append(clean_record)
 
         for mode in mode_to_rows:
@@ -1456,30 +1632,29 @@ def main() -> None:
             if sample is not None:
                 mode_to_rows[mode].append(sample)
 
-    random_pair_rows: List[Dict[str, str]] = []
-    answer_to_records: Dict[str, List[Dict[str, object]]] = {}
-    for record in clean_records:
-        answer_to_records.setdefault(str(record["answer"]), []).append(record)
-
-    for record in clean_records:
-        answer = str(record["answer"])
-        other_answer = "no" if answer == "yes" else "yes"
-        candidates = answer_to_records.get(other_answer, [])
-        if not candidates:
-            continue
-        sample_id = str(record["_sample_id"])
-        pair_idx = sample_seed(args.task, "random_pair", sample_id) % len(candidates)
-        paired = candidates[pair_idx]
-        if paired["_sample_id"] == record["_sample_id"] and len(candidates) > 1:
-            pair_idx = (pair_idx + 1) % len(candidates)
-            paired = candidates[pair_idx]
-        if paired["_sample_id"] == record["_sample_id"]:
-            continue
-        random_pair_rows.append(
-            build_random_pair_record(task=args.task, clean_record=record, paired_record=paired)
-        )
+    random_pair_rows, random_pair_stats = build_random_pair_rows(
+        task=args.task,
+        clean_records=clean_records,
+        length_mode=args.random_pair_length_mode,
+    )
 
     mode_to_rows["random_pair"] = random_pair_rows
+
+    if args.random_pair_length_mode in {"heuristic", "qwen"}:
+        print(
+            f"random_pair {args.random_pair_length_mode} pairing: "
+            f"kept={random_pair_stats['kept']} "
+            f"dropped_no_candidate={random_pair_stats['dropped_no_candidate']} "
+            f"dropped_self_pair={random_pair_stats['dropped_self_pair']} "
+            f"length_buckets_considered={random_pair_stats['same_length_candidates']}"
+        )
+    else:
+        print(
+            "random_pair answer-only pairing: "
+            f"kept={random_pair_stats['kept']} "
+            f"dropped_no_candidate={random_pair_stats['dropped_no_candidate']} "
+            f"dropped_self_pair={random_pair_stats['dropped_self_pair']}"
+        )
 
     for mode, rows in mode_to_rows.items():
         csv_path = task_output_dir / f"{mode}_data.csv"
