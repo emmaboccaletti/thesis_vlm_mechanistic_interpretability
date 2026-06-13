@@ -18,6 +18,8 @@ The clean sample is always a single horizontal composite image built from the
 ordered frame sequence.
 The perturbation-based counterfactual uses the same clip representation with
 visual Gaussian noise applied to the constituent frames before composition.
+If extracted frames are unavailable for a clip, the builder falls back to
+sampling the mp4 directly and composes the strip from those sampled frames.
 """
 
 from __future__ import annotations
@@ -25,6 +27,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import math
 import json
 import os
 from pathlib import Path
@@ -60,6 +63,11 @@ EVENT_TYPE_TO_ANSWER = {
 }
 
 EVENT_TYPE_ANSWER_ORDER = ["goal", "corner", "shot"]
+GOAL_TASK_EVENT_PRIORITY = {
+    "GOAL": 3,
+    "SHOT-ON-TARGET": 2,
+    "CORNER/THROW-IN": 1,
+}
 
 # A small curated lexicon based on the local MOMENTS transcript JSONs. These
 # replacements are football-domain friendly and are preferred over the generic
@@ -139,9 +147,9 @@ CSV_COLUMNS = [
     "cf_prompt_changes",
 ]
 
-COMPOSITE_TILE_SIZE = 160
+COMPOSITE_TILE_SIZE = 244
 COMPOSITE_SEPARATOR_PX = 4
-COMPOSITE_BACKGROUND = (0, 0, 0)
+COMPOSITE_BACKGROUND = (255, 255, 255)
 
 
 def parse_args() -> argparse.Namespace:
@@ -197,6 +205,15 @@ def parse_args() -> argparse.Namespace:
         help="Standard deviation of Gaussian noise for vision corruptions.",
     )
     parser.add_argument(
+        "--language_perturbation_fraction",
+        type=float,
+        default=0.10,
+        help=(
+            "Fraction of perturbable content words (ADJ/VERB/NOUN that can be "
+            "rewritten) to change in each sentence for language counterfactuals."
+        ),
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=0,
@@ -213,6 +230,14 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Optional root directory to use when constructing noisy-frame paths. "
             "Useful when you want the CSVs to point to an existing noisy-frame tree."
+        ),
+    )
+    parser.add_argument(
+        "--prefer_mp4",
+        action="store_true",
+        help=(
+            "Prefer sampling frames directly from the source mp4 instead of "
+            "using extracted PNG frames when available."
         ),
     )
     return parser.parse_args()
@@ -240,6 +265,24 @@ def load_annotation_rows(annotations_dir: str, task: str) -> List[Dict[str, str]
         reader = csv.DictReader(f)
         rows.extend(reader)
     return rows
+
+
+def deduplicate_goal_annotations(rows: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """
+    Keep one annotation row per mp4_path for the goal task.
+
+    Priority: GOAL > SHOT-ON-TARGET > CORNER/THROW-IN.
+    """
+    best_rows: Dict[str, Dict[str, str]] = {}
+    best_priority: Dict[str, int] = {}
+    for row in rows:
+        mp4_path = row["mp4_path"]
+        event_type = row["event_type"].strip().upper()
+        priority = GOAL_TASK_EVENT_PRIORITY.get(event_type, 0)
+        if mp4_path not in best_rows or priority > best_priority[mp4_path]:
+            best_rows[mp4_path] = row
+            best_priority[mp4_path] = priority
+    return list(best_rows.values())
 
 
 def resolve_path(path: str, repo_root: Optional[str] = None) -> str:
@@ -588,7 +631,39 @@ def _pick_antonym_for_token(token, nlp) -> Optional[Tuple[str, str]]:
     return None
 
 
-def _replace_one_content_word_in_sentence(sentence) -> Optional[Tuple[int, int, str, str, str]]:
+def _replace_one_content_word_in_sentence(
+    sentence,
+    perturbation_fraction: float = 0.10,
+) -> Optional[Tuple[str, str, str]]:
+    return _replace_content_words_in_sentence(sentence, perturbation_fraction)
+
+
+def _best_replacement_for_token(token, nlp) -> Optional[Tuple[str, str, str]]:
+    replacement = build_negation_rewrite(token)
+    if replacement is not None:
+        return replacement
+
+    replacement = build_curated_football_replacement(token)
+    if replacement is not None:
+        return replacement
+
+    replacement = _pick_antonym_for_token(token, nlp)
+    if replacement is not None:
+        repl_text, source_word = replacement
+        return repl_text, source_word, "spacy_wordnet_antonym"
+    return None
+
+
+def _replace_content_words_in_sentence(
+    sentence,
+    perturbation_fraction: float,
+) -> Optional[Tuple[str, str, str]]:
+    """
+    Perturb a fraction of the *eligible* content words in one sentence.
+
+    The fraction is measured over tokens that can actually be rewritten by the
+    current language perturbation rules, not over the full token count.
+    """
     target_pos = ("ADJ", "VERB", "NOUN")
     nlp = load_spacy_nlp()
     if nlp is None:
@@ -596,36 +671,100 @@ def _replace_one_content_word_in_sentence(sentence) -> Optional[Tuple[int, int, 
 
     candidates = [token for token in sentence if token.pos_ in target_pos]
     candidates.sort(key=lambda tok: (target_pos.index(tok.pos_), tok.idx))
+    if not candidates:
+        return None
 
-    # 1) Apply a negation contraction rewrite for auxiliaries like have/be/do.
+    target_count = max(1, int(math.ceil(len(candidates) * perturbation_fraction)))
+
+    replacements: List[Tuple[int, int, str, str, int]] = []
+    changes: List[str] = []
+    prompt_states: List[str] = []
+
     for token in candidates:
-        replacement = build_negation_rewrite(token)
+        if len(replacements) >= target_count:
+            break
+        replacement = _best_replacement_for_token(token, nlp)
         if replacement is None:
             continue
         repl_text, source_word, method = replacement
-        return token.idx, token.idx + len(token.text), repl_text, source_word, method
+        replacements.append((token.idx, token.idx + len(token.text), repl_text, source_word, token.idx))
+        prompt_states.append(method)
+        changes.append(f"sentence[{method}]:{source_word}->{repl_text}")
 
-    # 2) Prefer curated football-domain adjective substitutions.
-    for token in candidates:
-        replacement = build_curated_football_replacement(token)
-        if replacement is None:
-            continue
-        repl_text, source_word, method = replacement
-        return token.idx, token.idx + len(token.text), repl_text, source_word, method
+    if not replacements:
+        return None
 
-    # 3) Fall back to generic WordNet antonyms.
-    for token in candidates:
-        replacement = _pick_antonym_for_token(token, nlp)
-        if replacement is None:
-            continue
-        repl_text, source_word = replacement
-        return token.idx, token.idx + len(token.text), repl_text, source_word, "spacy_wordnet_antonym"
-    return None
+    perturbed_text = sentence.text
+    for start, end, repl_text, _source_word, _tok_idx in sorted(
+        replacements, key=lambda item: item[0], reverse=True
+    ):
+        local_start = start - sentence.start_char
+        local_end = end - sentence.start_char
+        perturbed_text = perturbed_text[:local_start] + repl_text + perturbed_text[local_end:]
+
+    state_order = ["football_curated", "negation_rewrite", "spacy_wordnet_antonym"]
+    state_set = set(prompt_states)
+    prompt_state = "+".join([state for state in state_order if state in state_set])
+    percent_tag = f"{round(perturbation_fraction * 100):02d}pct"
+    prompt_state = "+".join([f"coverage_{percent_tag}", prompt_state] if prompt_state else [f"coverage_{percent_tag}"])
+    return perturbed_text, prompt_state, "; ".join(changes)
 
 
-def replace_one_content_word_with_antonym(text: str) -> Optional[Tuple[str, str, str]]:
+# Sentence-level version kept here for reference in case we ever want to go
+# back to per-sentence coverage.
+#
+# def replace_one_content_word_with_antonym(
+#     text: str,
+#     perturbation_fraction: float = 0.10,
+# ) -> Optional[Tuple[str, str, str]]:
+#     nlp = load_spacy_nlp()
+#     if nlp is None:
+#         return None
+#
+#     doc = nlp(text)
+#     replacements: List[Tuple[int, int, str, str, int]] = []
+#     changes: List[str] = []
+#     prompt_states: List[str] = []
+#     sentences = list(doc.sents)
+#     for sent_idx, sentence in enumerate(sentences, start=1):
+#         replacement = _replace_content_words_in_sentence(
+#             sentence,
+#             perturbation_fraction=perturbation_fraction,
+#         )
+#         if replacement is None:
+#             continue
+#         repl_text, prompt_state, change_summary = replacement
+#         replacements.append((sentence.start_char, sentence.end_char, repl_text, sentence.text, sent_idx))
+#         prompt_states.extend([state for state in prompt_state.split("+") if state])
+#         changes.append(f"sentence_{sent_idx}[{prompt_state}]:{change_summary}")
+#
+#     if not replacements:
+#         return None
+#
+#     perturbed_text = text
+#     for start, end, repl_text, _source_word, _sent_idx in sorted(
+#         replacements, key=lambda item: item[0], reverse=True
+#     ):
+#         perturbed_text = perturbed_text[:start] + repl_text + perturbed_text[end:]
+#
+#     state_order = ["football_curated", "negation_rewrite", "spacy_wordnet_antonym"]
+#     state_set = set(prompt_states)
+#     percent_tag = f"{round(perturbation_fraction * 100):02d}pct"
+#     prompt_state = "+".join([f"coverage_{percent_tag}"] + [state for state in state_order if state in state_set])
+#     return perturbed_text, prompt_state, "; ".join(changes)
+#
+
+def replace_one_content_word_with_antonym(
+    text: str,
+    perturbation_fraction: float = 0.10,
+) -> Optional[Tuple[str, str, str]]:
     """
-    Replace a single content word in the text with a WordNet antonym when possible.
+    Replace a fraction of eligible content words across the whole description.
+
+    The coverage fraction is applied only to perturbable content words
+    (adjectives, verbs, and nouns that pass the rewrite checks), not to every
+    token in the sentence. The budget is computed globally over the full text
+    and then applied in left-to-right order.
 
     Returns:
         (perturbed_text, prompt_state, change_summary)
@@ -636,16 +775,31 @@ def replace_one_content_word_with_antonym(text: str) -> Optional[Tuple[str, str,
         return None
 
     doc = nlp(text)
+    sentences = list(doc.sents)
+    sentence_index = {sent.start_char: idx for idx, sent in enumerate(sentences, start=1)}
+    candidates: List[Tuple[int, int, object, int]] = []
+    for token in doc:
+        if token.pos_ not in {"ADJ", "VERB", "NOUN"}:
+            continue
+        sent_idx = sentence_index.get(token.sent.start_char, 1)
+        candidates.append((token.pos_, token.idx, token, sent_idx))
+    candidates.sort(key=lambda item: ({"ADJ": 0, "VERB": 1, "NOUN": 2}[item[0]], item[1]))
+    if not candidates:
+        return None
+
+    target_count = max(1, int(math.ceil(len(candidates) * perturbation_fraction)))
     replacements: List[Tuple[int, int, str, str, int]] = []
     changes: List[str] = []
     prompt_states: List[str] = []
-    sentences = list(doc.sents)
-    for sent_idx, sentence in enumerate(sentences, start=1):
-        replacement = _replace_one_content_word_in_sentence(sentence)
+
+    for _pos, _idx, token, sent_idx in candidates:
+        if len(replacements) >= target_count:
+            break
+        replacement = _best_replacement_for_token(token, nlp)
         if replacement is None:
             continue
-        start, end, repl_text, source_word, method = replacement
-        replacements.append((start, end, repl_text, source_word, sent_idx))
+        repl_text, source_word, method = replacement
+        replacements.append((token.idx, token.idx + len(token.text), repl_text, source_word, sent_idx))
         prompt_states.append(method)
         changes.append(f"sentence_{sent_idx}[{method}]:{source_word}->{repl_text}")
 
@@ -660,12 +814,20 @@ def replace_one_content_word_with_antonym(text: str) -> Optional[Tuple[str, str,
 
     state_order = ["football_curated", "negation_rewrite", "spacy_wordnet_antonym"]
     state_set = set(prompt_states)
-    prompt_state = "+".join([state for state in state_order if state in state_set])
+    percent_tag = f"{round(perturbation_fraction * 100):02d}pct"
+    prompt_state = "+".join([f"coverage_{percent_tag}"] + [state for state in state_order if state in state_set])
     return perturbed_text, prompt_state, "; ".join(changes)
 
 
-def build_language_counterfactual_text(local_text: str, global_text: str) -> Tuple[str, str, str]:
-    perturbed = replace_one_content_word_with_antonym(local_text)
+def build_language_counterfactual_text(
+    local_text: str,
+    global_text: str,
+    perturbation_fraction: float,
+) -> Tuple[str, str, str]:
+    perturbed = replace_one_content_word_with_antonym(
+        local_text,
+        perturbation_fraction=perturbation_fraction,
+    )
     if perturbed is not None:
         perturbed_text, prompt_state, change_summary = perturbed
         return perturbed_text, prompt_state, change_summary
@@ -787,7 +949,8 @@ def _fit_frame_into_tile(image: Image.Image, tile_size: int) -> Image.Image:
 
 def build_horizontal_composite(
     *,
-    frame_paths: Sequence[str],
+    frame_paths: Optional[Sequence[str]] = None,
+    frame_images: Optional[Sequence[Image.Image]] = None,
     output_path: str,
     noise_sigma: Optional[float] = None,
     seed_prefix: Sequence[str] = (),
@@ -802,12 +965,18 @@ def build_horizontal_composite(
     composition. The same composite is used as the single visual input for the
     clip.
     """
-    if not frame_paths:
-        raise ValueError("frame_paths must be non-empty")
+    if frame_paths is None and frame_images is None:
+        raise ValueError("frame_paths or frame_images must be provided")
+
+    if frame_images is None:
+        if not frame_paths:
+            raise ValueError("frame_paths must be non-empty")
+        frame_images = [load_image(frame_path) for frame_path in frame_paths]
+    elif not frame_images:
+        raise ValueError("frame_images must be non-empty")
 
     tiles: List[Image.Image] = []
-    for idx, frame_path in enumerate(frame_paths):
-        img = load_image(frame_path)
+    for idx, img in enumerate(frame_images):
         if noise_sigma is not None:
             seed = sample_seed(*seed_prefix, str(idx))
             img = apply_gaussian_noise(img, sigma=noise_sigma, seed=seed)
@@ -835,7 +1004,8 @@ def build_shared_vision_noisy_composite_path(
     clip_type: str,
     group_idx: str,
     clip_name: str,
-    frame_paths: Sequence[str],
+    frame_paths: Optional[Sequence[str]] = None,
+    frame_images: Optional[Sequence[Image.Image]] = None,
     output_dir: str,
     noise_sigma: float,
     write_noisy_frames: bool = True,
@@ -861,6 +1031,7 @@ def build_shared_vision_noisy_composite_path(
     if write_noisy_frames and not noisy_path.exists():
         build_horizontal_composite(
             frame_paths=frame_paths,
+            frame_images=frame_images,
             output_path=str(noisy_path),
             noise_sigma=noise_sigma,
             seed_prefix=(task, clip_id, clip_type, group_idx, clip_name),
@@ -876,7 +1047,8 @@ def build_clean_composite_path(
     clip_type: str,
     group_idx: str,
     clip_name: str,
-    frame_paths: Sequence[str],
+    frame_paths: Optional[Sequence[str]] = None,
+    frame_images: Optional[Sequence[Image.Image]] = None,
     output_dir: str,
     write_image: bool = True,
 ) -> str:
@@ -892,12 +1064,70 @@ def build_clean_composite_path(
     if write_image and not clean_path.exists():
         build_horizontal_composite(
             frame_paths=frame_paths,
+            frame_images=frame_images,
             output_path=str(clean_path),
             noise_sigma=None,
             seed_prefix=(),
             write_image=True,
         )
     return str(clean_path)
+
+
+def sample_frame_images_from_mp4(mp4_path: str, n_frames: int) -> List[Image.Image]:
+    """
+    Sample uniformly spaced frames directly from a MOMENTS mp4.
+
+    This is used as a fallback when extracted PNG frames are not available for a
+    clip.
+    """
+    try:
+        import cv2
+    except ImportError as exc:  # pragma: no cover - depends on local env
+        raise ImportError(
+            "OpenCV is required to sample frames directly from mp4 files"
+        ) from exc
+
+    cap = cv2.VideoCapture(mp4_path)
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    if total <= 0:
+        cap.release()
+        raise FileNotFoundError(f"Could not read any frames from {mp4_path}")
+
+    actual_n = min(n_frames, total)
+    indices = np.linspace(0, total - 1, actual_n, dtype=int)
+
+    images: List[Image.Image] = []
+    for frame_idx in indices:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_idx))
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        images.append(Image.fromarray(frame_rgb))
+
+    cap.release()
+    if not images:
+        raise FileNotFoundError(f"Could not sample any frames from {mp4_path}")
+    return images
+
+
+def load_clip_visual_inputs(
+    *,
+    frame_dir: str,
+    mp4_path: str,
+    n_frames: int,
+    prefer_mp4: bool = False,
+) -> Tuple[List[Image.Image], str, List[str]]:
+    """
+    Load clip frames from extracted PNGs when available, otherwise sample the mp4.
+    """
+    if not prefer_mp4 and os.path.isdir(frame_dir):
+        try:
+            frame_paths = parse_frame_paths(frame_dir, n_frames=n_frames)
+            return [load_image(path) for path in frame_paths], "frames", frame_paths
+        except (FileNotFoundError, OSError, ValueError):
+            pass
+    return sample_frame_images_from_mp4(mp4_path, n_frames=n_frames), "mp4", []
 
 
 def build_frame_root(
@@ -927,6 +1157,7 @@ def build_clean_record(
     output_dir: str,
     similarity_threshold: float,
     n_frames: int,
+    prefer_mp4: bool,
 ) -> Optional[Dict[str, object]]:
     """
     Build the clean, task-specific record used by all counterfactual modes.
@@ -948,14 +1179,20 @@ def build_clean_record(
     frame_dir, clip_id, clip_type, group_idx, clip_name = build_frame_root(
         resolve_path(frames_root), mp4_path
     )
-    frame_paths_abs = parse_frame_paths(frame_dir, n_frames=n_frames)
+    frame_images, frame_source, frame_paths_abs = load_clip_visual_inputs(
+        frame_dir=frame_dir,
+        mp4_path=mp4_path,
+        n_frames=n_frames,
+        prefer_mp4=prefer_mp4,
+    )
     composite_path_abs = build_clean_composite_path(
         task=task,
         clip_id=clip_id,
         clip_type=clip_type,
         group_idx=group_idx,
         clip_name=clip_name,
-        frame_paths=frame_paths_abs,
+        frame_paths=frame_paths_abs if frame_paths_abs else None,
+        frame_images=frame_images,
         output_dir=output_dir,
         write_image=True,
     )
@@ -981,7 +1218,8 @@ def build_clean_record(
         "prompt": prompt,
         "image_paths": to_repo_relative_path(composite_path_abs),
         "answer": answer,
-        "_frame_paths": frame_paths_abs,
+        "_frame_images": frame_images,
+        "_frame_source": frame_source,
         "_clean_composite_path": composite_path_abs,
         "_sample_id": sample_id,
     }
@@ -1028,6 +1266,8 @@ def build_sample_record(
     noise_sigma: float,
     write_noisy_frames: bool,
     noisy_frames_root: str,
+    prefer_mp4: bool,
+    language_perturbation_fraction: float,
     mode: str,
     similarity_threshold: float,
 ) -> Optional[Dict[str, str]]:
@@ -1038,6 +1278,7 @@ def build_sample_record(
         output_dir=output_dir,
         similarity_threshold=similarity_threshold,
         n_frames=n_frames,
+        prefer_mp4=prefer_mp4,
     )
     if clean_record is None:
         return None
@@ -1053,7 +1294,7 @@ def build_sample_record(
     global_text = str(clean_record["global_text"])
     prompt = str(clean_record["prompt"])
     answer = str(clean_record["answer"])
-    frame_paths = list(clean_record["_frame_paths"])  # type: ignore[index]
+    frame_images = list(clean_record["_frame_images"])  # type: ignore[index]
     sample_id = str(clean_record["_sample_id"])
     clean_composite_path = str(clean_record["_clean_composite_path"])
     cf_answer = get_cf_answer(task, answer, sample_id, mode)
@@ -1064,7 +1305,9 @@ def build_sample_record(
 
     if mode in {"language_only", "both"}:
         cf_text, cf_prompt_state, cf_prompt_changes = build_language_counterfactual_text(
-            local_text, global_text
+            local_text,
+            global_text,
+            perturbation_fraction=language_perturbation_fraction,
         )
         if mode == "both":
             cf_prompt_state = f"{cf_prompt_state}+vision_noise"
@@ -1086,7 +1329,7 @@ def build_sample_record(
             clip_type=clip_type,
             group_idx=group_idx,
             clip_name=clip_name,
-            frame_paths=frame_paths,
+            frame_images=frame_images,
             output_dir=output_dir,
             noise_sigma=noise_sigma,
             write_noisy_frames=write_noisy_frames,
@@ -1165,6 +1408,8 @@ def write_csv(path: str, rows: Sequence[Dict[str, str]]) -> None:
 def main() -> None:
     args = parse_args()
     annotations = load_annotation_rows(args.annotations_dir, args.task)
+    if args.task == "goal":
+        annotations = deduplicate_goal_annotations(annotations)
     if args.limit > 0:
         annotations = annotations[: args.limit]
 
@@ -1186,6 +1431,7 @@ def main() -> None:
             output_dir=args.output_dir,
             similarity_threshold=args.similarity_threshold,
             n_frames=args.n_frames,
+            prefer_mp4=args.prefer_mp4,
         )
         if clean_record is None:
             continue
@@ -1202,6 +1448,8 @@ def main() -> None:
                 noise_sigma=args.noise_sigma,
                 write_noisy_frames=not args.no_write_noisy_frames,
                 noisy_frames_root=args.noisy_frames_root,
+                prefer_mp4=args.prefer_mp4,
+                language_perturbation_fraction=args.language_perturbation_fraction,
                 mode=mode,
                 similarity_threshold=args.similarity_threshold,
             )
