@@ -30,6 +30,7 @@ import hashlib
 import math
 import json
 import os
+from collections import defaultdict
 from pathlib import Path
 from functools import lru_cache
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -150,6 +151,7 @@ CSV_COLUMNS = [
 COMPOSITE_TILE_SIZE = 244
 COMPOSITE_SEPARATOR_PX = 4
 COMPOSITE_BACKGROUND = (255, 255, 255)
+DEFAULT_LANGUAGE_TOKENIZER_PATH = ""
 
 
 def parse_args() -> argparse.Namespace:
@@ -210,7 +212,35 @@ def parse_args() -> argparse.Namespace:
         default=0.10,
         help=(
             "Fraction of perturbable content words (ADJ/VERB/NOUN that can be "
-            "rewritten) to change in each sentence for language counterfactuals."
+            "rewritten) to change in each prompt for language counterfactuals."
+        ),
+    )
+    parser.add_argument(
+        "--language_perturbation_mode",
+        choices=("dataset_sample", "antonym", "off"),
+        default="dataset_sample",
+        help=(
+            "How to generate language counterfactuals. dataset_sample uses a "
+            "fixed Qwen-tokenized word pool built from the dataset, antonym "
+            "keeps the older rewrite path, and off disables language edits."
+        ),
+    )
+    parser.add_argument(
+        "--language_tokenizer_path",
+        default=DEFAULT_LANGUAGE_TOKENIZER_PATH,
+        help=(
+            "HF model path used to identify same-token-length replacement words for "
+            "dataset-sampled language counterfactuals. Required when "
+            "--language_perturbation_mode dataset_sample is selected."
+        ),
+    )
+    parser.add_argument(
+        "--language_vocab_path",
+        default="",
+        help=(
+            "Optional path to a cached JSON vocabulary of same-token-length "
+            "replacement words. If omitted, the builder writes one next to the "
+            "generated MOMENTS CSVs."
         ),
     )
     parser.add_argument(
@@ -386,6 +416,184 @@ def load_spacy_nlp():
         return spacy.load("en_core_web_sm")
     except OSError:
         return None
+
+
+@lru_cache(maxsize=4)
+def load_language_tokenizer(tokenizer_path: str):
+    """
+    Load the model tokenizer used to decide whether a replacement word is a
+    single token.
+
+    The MOMENTS language path is currently Qwen-specific, so this helper is
+    intentionally lightweight and local-only.
+    """
+    if not tokenizer_path:
+        raise ValueError("tokenizer_path must be provided")
+
+    from transformers import AutoTokenizer
+
+    return AutoTokenizer.from_pretrained(tokenizer_path, trust_remote_code=True)
+
+
+def _token_length(tokenizer, text: str) -> int:
+    if not text or not text.strip():
+        return 0
+    encoded = tokenizer(text, add_special_tokens=False)
+    return len(encoded["input_ids"])
+
+
+def _token_is_replacement_candidate(token) -> bool:
+    if token.is_space or token.is_punct:
+        return False
+    surface = token.text.strip()
+    if not surface:
+        return False
+    return any(ch.isalpha() for ch in surface)
+
+
+def _normalize_word_surface(text: str) -> str:
+    return text.strip().lower()
+
+
+def _bucket_key_for_length(length: int) -> str:
+    return str(int(length))
+
+
+def build_language_replacement_vocab(
+    clean_records: Sequence[Dict[str, object]],
+    tokenizer,
+) -> Dict[str, object]:
+    """
+    Build a fixed, model-dependent word pool from the local MOMENTS dataset.
+
+    The pool keeps only words that are valid transcript words and groups them by
+    exact tokenizer length under the supplied tokenizer.
+    """
+    nlp = load_spacy_nlp()
+    if nlp is None:
+        raise RuntimeError(
+            "spaCy is required to build the MOMENTS language replacement vocab"
+        )
+
+    vocab: Dict[str, set] = defaultdict(set)
+
+    def add_token(token) -> None:
+        if not _token_is_replacement_candidate(token):
+            return
+        surface = _normalize_word_surface(token.text)
+        if not surface:
+            return
+        length = _token_length(tokenizer, surface)
+        if length <= 0:
+            return
+        vocab[_bucket_key_for_length(length)].add(surface)
+
+    for record in clean_records:
+        for text_field in ("local_text", "global_text"):
+            text = str(record.get(text_field, "")).strip()
+            if not text:
+                continue
+            doc = nlp(text)
+            for token in doc:
+                add_token(token)
+
+    # Convert sets to sorted lists for deterministic sampling and JSON output.
+    return {bucket: sorted(words) for bucket, words in sorted(vocab.items(), key=lambda item: int(item[0]))}
+
+
+def load_or_build_language_replacement_vocab(
+    *,
+    clean_records: Sequence[Dict[str, object]],
+    tokenizer_path: str,
+    vocab_path: str,
+) -> Dict[str, object]:
+    if not tokenizer_path:
+        raise ValueError(
+            "language_tokenizer_path is required for dataset-sampled language perturbations"
+        )
+
+    if vocab_path and os.path.exists(vocab_path):
+        with open(vocab_path, "r") as f:
+            payload = json.load(f)
+        if payload.get("tokenizer_path") == tokenizer_path and "buckets" in payload:
+            return payload["buckets"]
+
+    tokenizer = load_language_tokenizer(tokenizer_path)
+    vocab = build_language_replacement_vocab(clean_records, tokenizer)
+
+    if vocab_path:
+        vocab_dir = os.path.dirname(vocab_path)
+        if vocab_dir:
+            os.makedirs(vocab_dir, exist_ok=True)
+        with open(vocab_path, "w") as f:
+            json.dump(
+                {
+                    "tokenizer_path": tokenizer_path,
+                    "buckets": vocab,
+                },
+                f,
+                indent=2,
+                sort_keys=True,
+            )
+    return vocab
+
+
+def _replacement_bucket_for_token(token, vocab: Dict[str, object], tokenizer) -> List[str]:
+    length = _token_length(tokenizer, token.text.strip())
+    if length <= 0:
+        return []
+    bucket = vocab.get(_bucket_key_for_length(length), [])
+    if not isinstance(bucket, list):
+        return []
+    return bucket
+
+
+def _sample_dataset_replacement_for_token(
+    token,
+    *,
+    text: str,
+    task: str,
+    sample_id: str,
+    vocab: Dict[str, object],
+    tokenizer,
+    clean_prompt: str,
+) -> Optional[Tuple[str, str, str]]:
+    """
+    Choose a deterministic same-length replacement from the fixed dataset pool.
+
+    We walk the candidate list in a hashed order and only accept replacements
+    that keep the full prompt tokenized length unchanged.
+    """
+    candidates = _replacement_bucket_for_token(token, vocab, tokenizer)
+    if not candidates:
+        return None
+
+    source_text = token.text.strip()
+    source_lower = source_text.lower()
+    filtered = [word for word in candidates if word.lower() != source_lower]
+    if not filtered:
+        return None
+
+    source_length = _token_length(tokenizer, source_text)
+    seed = sample_seed(task, sample_id, str(token.idx), token.text, str(source_length))
+    start_idx = seed % len(filtered)
+    clean_length = _token_length(tokenizer, clean_prompt)
+
+    for offset in range(len(filtered)):
+        candidate = filtered[(start_idx + offset) % len(filtered)]
+        replacement_text = apply_surface_case(source_text, candidate)
+        if replacement_text.lower() == source_lower:
+            continue
+        if _token_length(tokenizer, replacement_text) != source_length:
+            continue
+        replacement_prompt = build_prompt(
+            text[: token.idx] + replacement_text + text[token.idx + len(token.text) :],
+            task,
+        )
+        if _token_length(tokenizer, replacement_prompt) != clean_length:
+            continue
+        return replacement_text, source_text, f"dataset_sample:length_{source_length}"
+    return None
 
 
 def get_wordnet_antonyms(word: str) -> List[str]:
@@ -838,19 +1046,134 @@ def replace_one_content_word_with_antonym(
     return perturbed_text, prompt_state, "; ".join(changes)
 
 
+def replace_one_content_word_with_dataset_sample(
+    text: str,
+    *,
+    task: str,
+    sample_id: str,
+    perturbation_fraction: float,
+    vocab: Dict[str, object],
+    tokenizer,
+) -> Optional[Tuple[str, str, str]]:
+    """
+    Replace eligible content words with deterministic dataset-sampled words.
+    """
+    nlp = load_spacy_nlp()
+    if nlp is None:
+        return None
+
+    doc = nlp(text)
+    sentences = list(doc.sents)
+    sentence_index = {sent.start_char: idx for idx, sent in enumerate(sentences, start=1)}
+    candidates: List[Tuple[int, object, int, int]] = []
+    for token in doc:
+        if not _token_is_replacement_candidate(token):
+            continue
+        token_length = _token_length(tokenizer, token.text.strip())
+        if token_length <= 0:
+            continue
+        bucket = vocab.get(_bucket_key_for_length(token_length), [])
+        if not isinstance(bucket, list) or not any(word.lower() != token.text.strip().lower() for word in bucket):
+            continue
+        sent_idx = sentence_index.get(token.sent.start_char, 1)
+        candidates.append((token.idx, token, token_length, sent_idx))
+    if not candidates:
+        return None
+
+    target_count = max(1, int(math.ceil(len(candidates) * perturbation_fraction)))
+    ranked_candidates = sorted(
+        candidates,
+        key=lambda item: sample_seed(task, sample_id, "source", str(item[0]), item[1].text),
+    )
+    replacements: List[Tuple[int, int, str, str, int]] = []
+    changes: List[str] = []
+
+    clean_prompt = build_prompt(text, task)
+    clean_prompt_length = _token_length(tokenizer, clean_prompt)
+
+    def apply_replacements(
+        selected: Sequence[Tuple[int, int, str, str, int]],
+    ) -> str:
+        rewritten = text
+        for start, end, repl_text, _source_word, _sent_idx in sorted(
+            selected, key=lambda item: item[0], reverse=True
+        ):
+            rewritten = rewritten[:start] + repl_text + rewritten[end:]
+        return rewritten
+
+    for token_idx, token, source_length, sent_idx in ranked_candidates:
+        if len(replacements) >= target_count:
+            break
+        replacement = _sample_dataset_replacement_for_token(
+            token,
+            text=text,
+            task=task,
+            sample_id=sample_id,
+            vocab=vocab,
+            tokenizer=tokenizer,
+            clean_prompt=clean_prompt,
+        )
+        if replacement is None:
+            continue
+        repl_text, source_word, method = replacement
+        candidate_replacements = replacements + [
+            (token.idx, token.idx + len(token.text), repl_text, source_word, sent_idx)
+        ]
+        candidate_text = apply_replacements(candidate_replacements)
+        candidate_prompt = build_prompt(candidate_text, task)
+        if _token_length(tokenizer, candidate_prompt) != clean_prompt_length:
+            continue
+        replacements = candidate_replacements
+        changes.append(f"sentence_{sent_idx}[{method}]:{source_word}->{repl_text}")
+
+    if not replacements:
+        return None
+
+    perturbed_text = apply_replacements(replacements)
+    # Keep this invariant close to the output boundary: downstream activation
+    # patching assumes clean and counterfactual sequences have equal length.
+    if _token_length(tokenizer, build_prompt(perturbed_text, task)) != clean_prompt_length:
+        raise AssertionError("language counterfactual changed the full prompt length")
+
+    percent_tag = f"{round(perturbation_fraction * 100):02d}pct"
+    prompt_state = f"coverage_{percent_tag}+dataset_sample+qwen_same_token_length"
+    return perturbed_text, prompt_state, "; ".join(changes)
+
+
 def build_language_counterfactual_text(
     local_text: str,
     global_text: str,
     perturbation_fraction: float,
+    *,
+    mode: str,
+    task: str,
+    sample_id: str,
+    language_vocab: Optional[Dict[str, object]] = None,
+    language_tokenizer=None,
 ) -> Tuple[str, str, str]:
-    perturbed = replace_one_content_word_with_antonym(
-        local_text,
-        perturbation_fraction=perturbation_fraction,
-    )
+    if mode == "off":
+        return global_text or local_text, "language_off", "language_perturbation_disabled"
+
+    if mode == "dataset_sample":
+        if language_vocab is None or language_tokenizer is None:
+            raise ValueError("dataset_sample mode requires a language vocabulary and tokenizer")
+        perturbed = replace_one_content_word_with_dataset_sample(
+            local_text,
+            task=task,
+            sample_id=sample_id,
+            perturbation_fraction=perturbation_fraction,
+            vocab=language_vocab,
+            tokenizer=language_tokenizer,
+        )
+    else:
+        perturbed = replace_one_content_word_with_antonym(
+            local_text,
+            perturbation_fraction=perturbation_fraction,
+        )
     if perturbed is not None:
         perturbed_text, prompt_state, change_summary = perturbed
         return perturbed_text, prompt_state, change_summary
-    return global_text or local_text, "global_fallback", "fallback_to_global_text"
+    return global_text or local_text, "dataset_sample_fallback", "fallback_to_global_text"
 
 
 def get_task_question(task: str) -> str:
@@ -1274,34 +1597,20 @@ def to_repo_relative_path(path: str) -> str:
         return path.lstrip(os.sep)
 
 
-def build_sample_record(
+def build_sample_record_from_clean_record(
     *,
     task: str,
-    row: Dict[str, str],
-    moments_root: str,
-    frames_root: str,
+    clean_record: Dict[str, object],
     output_dir: str,
-    n_frames: int,
     noise_sigma: float,
     write_noisy_frames: bool,
     noisy_frames_root: str,
-    prefer_mp4: bool,
     language_perturbation_fraction: float,
     mode: str,
-    similarity_threshold: float,
+    language_mode: str,
+    language_vocab: Optional[Dict[str, object]] = None,
+    language_tokenizer=None,
 ) -> Optional[Dict[str, str]]:
-    clean_record = build_clean_record(
-        task=task,
-        row=row,
-        frames_root=frames_root,
-        output_dir=output_dir,
-        similarity_threshold=similarity_threshold,
-        n_frames=n_frames,
-        prefer_mp4=prefer_mp4,
-    )
-    if clean_record is None:
-        return None
-
     clip_id = str(clean_record["clip_id"])
     clip_type = str(clean_record["clip_type"])
     group_idx = str(clean_record["group_idx"])
@@ -1327,6 +1636,11 @@ def build_sample_record(
             local_text,
             global_text,
             perturbation_fraction=language_perturbation_fraction,
+            mode=language_mode,
+            task=task,
+            sample_id=sample_id,
+            language_vocab=language_vocab,
+            language_tokenizer=language_tokenizer,
         )
         if mode == "both":
             cf_prompt_state = f"{cf_prompt_state}+vision_noise"
@@ -1379,6 +1693,46 @@ def build_sample_record(
         "cf_prompt_state": cf_prompt_state,
         "cf_prompt_changes": cf_prompt_changes,
     }
+
+
+def build_sample_record(
+    *,
+    task: str,
+    row: Dict[str, str],
+    moments_root: str,
+    frames_root: str,
+    output_dir: str,
+    n_frames: int,
+    noise_sigma: float,
+    write_noisy_frames: bool,
+    noisy_frames_root: str,
+    prefer_mp4: bool,
+    language_perturbation_fraction: float,
+    mode: str,
+    similarity_threshold: float,
+) -> Optional[Dict[str, str]]:
+    clean_record = build_clean_record(
+        task=task,
+        row=row,
+        frames_root=frames_root,
+        output_dir=output_dir,
+        similarity_threshold=similarity_threshold,
+        n_frames=n_frames,
+        prefer_mp4=prefer_mp4,
+    )
+    if clean_record is None:
+        return None
+    return build_sample_record_from_clean_record(
+        task=task,
+        clean_record=clean_record,
+        output_dir=output_dir,
+        noise_sigma=noise_sigma,
+        write_noisy_frames=write_noisy_frames,
+        noisy_frames_root=noisy_frames_root,
+        language_perturbation_fraction=language_perturbation_fraction,
+        mode=mode,
+        language_mode="dataset_sample" if mode in {"language_only", "both"} else "off",
+    )
 
 
 def build_random_pair_record(
@@ -1581,13 +1935,6 @@ def main() -> None:
         "vision_only": [],
         "both": [],
     }
-    pairing_processor = None
-    if args.random_pair_length_mode == "qwen":
-        if not args.pairing_model_path:
-            raise ValueError(
-                "--pairing_model_path is required when --random_pair_length_mode qwen is set"
-            )
-        pairing_processor = load_pairing_processor(args.pairing_model_path)
 
     for row in annotations:
         clean_record = build_clean_record(
@@ -1598,9 +1945,37 @@ def main() -> None:
             similarity_threshold=args.similarity_threshold,
             n_frames=args.n_frames,
             prefer_mp4=args.prefer_mp4,
+        )
+        if clean_record is not None:
+            clean_records.append(clean_record)
+
+    language_vocab = None
+    language_tokenizer = None
+    language_vocab_path = args.language_vocab_path
+    if args.language_perturbation_mode == "dataset_sample":
+        language_tokenizer_path = args.language_tokenizer_path or args.pairing_model_path
+        if not language_tokenizer_path:
+            raise ValueError(
+                "--language_tokenizer_path is required when --language_perturbation_mode dataset_sample is set"
             )
-        if clean_record is None:
-            continue
+        if not language_vocab_path:
+            language_vocab_path = str(task_output_dir / "qwen_same_token_length_vocab.json")
+        language_tokenizer = load_language_tokenizer(language_tokenizer_path)
+        language_vocab = load_or_build_language_replacement_vocab(
+            clean_records=clean_records,
+            tokenizer_path=language_tokenizer_path,
+            vocab_path=language_vocab_path,
+        )
+
+    pairing_processor = None
+    if args.random_pair_length_mode == "qwen":
+        if not args.pairing_model_path:
+            raise ValueError(
+                "--pairing_model_path is required when --random_pair_length_mode qwen is set"
+            )
+        pairing_processor = load_pairing_processor(args.pairing_model_path)
+
+    for clean_record in clean_records:
         if args.random_pair_length_mode == "qwen" and pairing_processor is not None:
             clean_record["_pairing_token_length"] = _pairing_prompt_token_length(
                 pairing_processor,
@@ -1611,23 +1986,20 @@ def main() -> None:
             clean_record["_pairing_heuristic_length"] = _pairing_heuristic_length(
                 str(clean_record["prompt"])
             )
-        clean_records.append(clean_record)
 
         for mode in mode_to_rows:
-            sample = build_sample_record(
+            sample = build_sample_record_from_clean_record(
                 task=args.task,
-                row=row,
-                moments_root=args.moments_root,
-                frames_root=args.frames_root,
+                clean_record=clean_record,
                 output_dir=args.output_dir,
-                n_frames=args.n_frames,
                 noise_sigma=args.noise_sigma,
                 write_noisy_frames=not args.no_write_noisy_frames,
                 noisy_frames_root=args.noisy_frames_root,
-                prefer_mp4=args.prefer_mp4,
                 language_perturbation_fraction=args.language_perturbation_fraction,
                 mode=mode,
-                similarity_threshold=args.similarity_threshold,
+                language_mode=args.language_perturbation_mode,
+                language_vocab=language_vocab,
+                language_tokenizer=language_tokenizer,
             )
             if sample is not None:
                 mode_to_rows[mode].append(sample)
