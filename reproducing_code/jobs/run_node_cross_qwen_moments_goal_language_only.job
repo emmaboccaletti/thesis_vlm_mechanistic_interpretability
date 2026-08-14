@@ -19,13 +19,8 @@ set -euo pipefail
 
 cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
 
-RESULT_DIR=data/moments_goal/results/qwen2-7b-vl-instruct
-RESULT_FILE="$RESULT_DIR/faithfulness_nodes_cross_interchanges_LD.pt"
-ARCHIVE_DIR="$RESULT_DIR/cross_modality"
-mkdir -p "$ARCHIVE_DIR"
-if [ -e "$RESULT_FILE" ]; then
-  mv "$RESULT_FILE" "$ARCHIVE_DIR/faithfulness_nodes_cross_interchanges_language_only_previous_${SLURM_JOB_ID}.pt"
-fi
+RESULT_FILE="data/moments_goal/results/qwen2-7b-vl-instruct_language_only_nap_ig=5/cross_modality/faithfulness_nodes_cross_interchanges_LD_${SLURM_JOB_ID}.pt"
+mkdir -p "$(dirname "$RESULT_FILE")"
 
 echo "=== Qwen2 MOMENTS goal cross-modal interchange ==="
 echo "=== Counterfactual mode: language_only; L/VL views retained ==="
@@ -40,9 +35,9 @@ python script_node_cross_modality_analysis.py \
   --task_name moments_goal \
   --moments_cf_mode language_only \
   --scores_dir data/moments_goal/results/qwen2-7b-vl-instruct_language_only_nap_ig=5 \
+  --output_file "$RESULT_FILE" \
   --l_circuit_percentage 0.01 \
   --vl_circuit_percentage 0.03
 
-mv "$RESULT_FILE" "$ARCHIVE_DIR/faithfulness_nodes_cross_interchanges_language_only_LD_${SLURM_JOB_ID}.pt"
-echo "Saved mode-specific result: $ARCHIVE_DIR/faithfulness_nodes_cross_interchanges_language_only_LD_${SLURM_JOB_ID}.pt"
+echo "Saved mode-specific result: $RESULT_FILE"
 echo "End time: $(date)"
