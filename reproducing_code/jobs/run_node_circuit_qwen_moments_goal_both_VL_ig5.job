@@ -20,8 +20,8 @@ set -euo pipefail
 
 cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
 
-echo "=== Qwen MOMENTS goal: multimodal both condition ==="
-echo "=== Transcript and image counterfactuals; --ap_ig_steps 5 ==="
+echo "=== Qwen node circuit: MOMENTS goal job. CF MODE: both (VL) ==="
+echo "=== Transcript and image counterfactuals (no language_only flag) AND ap_ig_steps = 5 ==="
 echo "Host: $(hostname)"
 echo "Start time: $(date)"
 echo "Working dir: $(pwd)"

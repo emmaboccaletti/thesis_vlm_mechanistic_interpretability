@@ -20,7 +20,7 @@ set -euo pipefail
 
 cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
 
-echo "=== Qwen MOMENTS goal: text-only both control ==="
+echo "=== Qwen node circuit: MOMENTS goal job. CF MODE both (L) ==="
 echo "=== Images discarded via --language_only; --ap_ig_steps 5 ==="
 echo "Host: $(hostname)"
 echo "Start time: $(date)"
@@ -36,6 +36,6 @@ python script_node_circuit_discovery_and_eval.py \
   --moments_cf_mode both \
   --language_only \
   --ap_ig_steps 5 \
-  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_both_text_only_nap_ig=5
+  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_both_nap_ig=5
 
 echo "End time: $(date)"

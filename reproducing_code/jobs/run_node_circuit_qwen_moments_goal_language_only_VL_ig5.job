@@ -18,7 +18,8 @@ set -euo pipefail
 
 cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
 
-echo "=== Qwen node circuit: MOMENTS goal true language-only job ==="
+echo "=== Qwen node circuit: MOMENTS goal job. CF MODE:language-only (VL) ==="
+echo "=== ap_ig_steps = 5 AND no language_only (aka text only input) flag ==="
 echo "Host: $(hostname)"
 echo "Start time: $(date)"
 echo "Working dir: $(pwd)"
@@ -31,7 +32,6 @@ python script_node_circuit_discovery_and_eval.py \
   --model_path /home/eboccaletti/models/qwen2vl7b \
   --task_name moments_goal \
   --moments_cf_mode language_only \
-  --language_only \
   --ap_ig_steps 5 \
   --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_language_only_nap_ig=5
 
