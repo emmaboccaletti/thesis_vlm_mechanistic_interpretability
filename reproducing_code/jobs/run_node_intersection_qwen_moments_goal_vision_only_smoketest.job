@@ -18,6 +18,9 @@ set -euo pipefail
 
 cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
 
+RESULT_FILE="data/moments_goal/results/qwen2-7b-vl-instruct_vision_only_nap_ig=5/intersection/faithfulness_nodes_intersection_LD_${SLURM_JOB_ID}.pt"
+mkdir -p "$(dirname "$RESULT_FILE")"
+
 echo "=== Qwen node intersection: MOMENTS goal smoke test (vision_only) ==="
 echo "Host: $(hostname)"
 echo "Start time: $(date)"
@@ -31,6 +34,8 @@ python script_node_intersection.py \
   --model_path /home/eboccaletti/models/qwen2vl7b \
   --task_name moments_goal \
   --moments_cf_mode vision_only \
+  --scores_dir data/moments_goal/results/qwen2-7b-vl-instruct_vision_only_nap_ig=5 \
+  --output_file "$RESULT_FILE" \
   --l_circuit_percentage 0.01 \
   --vl_circuit_percentage 0.03
 
