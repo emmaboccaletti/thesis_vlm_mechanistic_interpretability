@@ -34,6 +34,7 @@ python script_node_circuit_discovery_and_eval.py \
   --model_path /home/eboccaletti/models/qwen2vl7b \
   --task_name moments_goal \
   --moments_cf_mode both \
-  --ap_ig_steps 5
+  --ap_ig_steps 5 \
+  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_both_nap_ig=5
 
 echo "End time: $(date)"

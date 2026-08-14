@@ -31,6 +31,7 @@ python script_node_cross_modality_analysis.py \
   --model_path /home/eboccaletti/models/qwen2vl7b \
   --task_name moments_goal \
   --moments_cf_mode vision_only \
+  --scores_dir data/moments_goal/results/qwen2-7b-vl-instruct_vision_only_nap_ig=5 \
   --l_circuit_percentage 0.01 \
   --vl_circuit_percentage 0.03
 

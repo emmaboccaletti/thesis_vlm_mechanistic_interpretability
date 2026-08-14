@@ -34,6 +34,7 @@ python script_node_circuit_discovery_and_eval.py \
   --moments_cf_mode both \
   --ap_ig_steps 1 \
   --moments_max_images 1 \
-  --moments_total_prompt_count 2
+  --moments_total_prompt_count 2 \
+  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_both_smoketest_nap_ig=1
 
 echo "End time: $(date)"

@@ -1,0 +1,47 @@
+#!/bin/bash
+# Cross-modal interchange analysis for the multimodal both-perturbed condition.
+# Both transcript and image counterfactuals are retained in the L/VL views.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_Bmoments_cross
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_cross_gpu_h100_Bmoments_goal_both_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_cross_gpu_h100_Bmoments_goal_both_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_DIR=data/moments_goal/results/qwen2-7b-vl-instruct
+RESULT_FILE="$RESULT_DIR/faithfulness_nodes_cross_interchanges_LD.pt"
+ARCHIVE_DIR="$RESULT_DIR/cross_modality"
+mkdir -p "$ARCHIVE_DIR"
+if [ -e "$RESULT_FILE" ]; then
+  mv "$RESULT_FILE" "$ARCHIVE_DIR/faithfulness_nodes_cross_interchanges_both_previous_${SLURM_JOB_ID}.pt"
+fi
+
+echo "=== Qwen2 MOMENTS goal cross-modal interchange ==="
+echo "=== Counterfactual mode: both ==="
+echo "=== Circuit percentages: L=1%, VL=3%; ap_ig_steps=5 scores ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python script_node_cross_modality_analysis.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode both \
+  --scores_dir data/moments_goal/results/qwen2-7b-vl-instruct_both_nap_ig=5 \
+  --l_circuit_percentage 0.01 \
+  --vl_circuit_percentage 0.03
+
+mv "$RESULT_FILE" "$ARCHIVE_DIR/faithfulness_nodes_cross_interchanges_both_LD_${SLURM_JOB_ID}.pt"
+echo "Saved mode-specific result: $ARCHIVE_DIR/faithfulness_nodes_cross_interchanges_both_LD_${SLURM_JOB_ID}.pt"
+echo "End time: $(date)"

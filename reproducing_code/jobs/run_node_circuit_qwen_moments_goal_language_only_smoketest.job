@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
-#SBATCH --job-name=Qwen_moments_goal_NodeCircuit_gpu_h100
-#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_circuit_gpu_h100_Vmoments_goal_%j.out
-#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_circuit_gpu_h100_Vmoments_goal_%j.err
+#SBATCH --job-name=Qwen_Vmoments_goal_language_only_smoke_NodeCircuit_gpu_h100
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_circuit_gpu_h100_Vmoments_goal_language_only_smoketest_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_circuit_gpu_h100_Vmoments_goal_language_only_smoketest_%j.err
 #SBATCH --cpus-per-task=9
 #SBATCH --mem=64G
-#SBATCH --time=03:00:00
+#SBATCH --time=00:30:00
 
 module purge
 module load 2025
@@ -19,7 +19,7 @@ set -euo pipefail
 
 cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
 
-echo "=== Qwen node circuit: MOMENTS goal job (vision_only) ==="
+echo "=== Qwen node circuit: MOMENTS goal smoke test (language_only) ==="
 echo "Host: $(hostname)"
 echo "Start time: $(date)"
 echo "Working dir: $(pwd)"
@@ -31,8 +31,10 @@ python script_node_circuit_discovery_and_eval.py \
   --model_name qwen2-7b-vl-instruct \
   --model_path /home/eboccaletti/models/qwen2vl7b \
   --task_name moments_goal \
-  --moments_cf_mode vision_only \
-  --ap_ig_steps 5 \
-  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_vision_only_nap_ig=5
+  --moments_cf_mode language_only \
+  --ap_ig_steps 1 \
+  --moments_max_images 1 \
+  --moments_total_prompt_count 2 \
+  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_language_only_smoketest_nap_ig=1
 
 echo "End time: $(date)"
