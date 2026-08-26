@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# Qwen3-VL smoke test.
+# Verifies that the downloaded model loads and can process a tiny synthetic
+# multimodal prompt from the stable symlink path.
+
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen3VLSmoke
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=00:30:00
+#SBATCH --mem=48G
+#SBATCH --output=/home/eboccaletti/models/job_outputs/slurm_smoketest_qwen3vl_%A.out
+
+set -euo pipefail
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate vlm_qwen3_reproducing_env
+
+MODEL_PATH="/home/eboccaletti/models/qwen3vl8b"
+
+echo "=== Qwen3-VL smoke test ==="
+echo "Model path: ${MODEL_PATH}"
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python -u <<'PY'
+from pathlib import Path
+import tempfile
+
+import torch
+import transformers
+from PIL import Image
+
+model_path = "/home/eboccaletti/models/qwen3vl8b"
+tmp_img = Path(tempfile.gettempdir()) / "qwen3vl_smoke_test.png"
+
+# Create a local synthetic image so the smoke test does not depend on network
+# access or extra repository assets.
+Image.new("RGB", (256, 256), color=(127, 64, 32)).save(tmp_img)
+
+processor = transformers.AutoProcessor.from_pretrained(model_path)
+
+candidate_classes = [
+    "Qwen3VLForConditionalGeneration",
+    "AutoModelForMultimodalLM",
+    "AutoModelForImageTextToText",
+]
+
+model = None
+loaded_class = None
+attempt_errors = []
+for class_name in candidate_classes:
+    cls = getattr(transformers, class_name, None)
+    if cls is None:
+        attempt_errors.append(f"{class_name}: not available in this transformers build")
+        continue
+    try:
+        model = cls.from_pretrained(
+            model_path,
+            device_map="auto",
+            torch_dtype=torch.bfloat16,
+        )
+        loaded_class = class_name
+        break
+    except Exception as exc:
+        attempt_errors.append(f"{class_name}: {exc}")
+
+if model is None:
+    print("Could not load Qwen3-VL with any candidate class.")
+    for err in attempt_errors:
+        print(" -", err)
+    raise SystemExit(1)
+
+model.eval()
+print("Loaded model class:", loaded_class)
+print("Loaded processor class:", type(processor).__name__)
+print("Has vision_model:", hasattr(model, "vision_model"))
+print("Has multi_modal_projector:", hasattr(model, "multi_modal_projector"))
+print("HF architecture:", getattr(getattr(model, "config", None), "architectures", None))
+
+messages = [
+    {
+        "role": "user",
+        "content": [
+            {"type": "image", "url": str(tmp_img)},
+            {"type": "text", "text": "Is this a goal? Answer yes or no."},
+        ],
+    }
+]
+
+try:
+    inputs = processor.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(model.device)
+    print("Used processor.apply_chat_template with tokenization.")
+except Exception as exc:
+    print("apply_chat_template(tokenize=True) failed, falling back:", exc)
+    prompt_text = processor.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        tokenize=False,
+    )
+    image = Image.open(tmp_img).convert("RGB")
+    inputs = processor(
+        text=[prompt_text],
+        images=[image],
+        return_tensors="pt",
+    ).to(model.device)
+    print("Used processor(text=..., images=...) fallback.")
+
+with torch.no_grad():
+    outputs = model.generate(**inputs, max_new_tokens=20)
+
+decoded = processor.decode(
+    outputs[0][inputs["input_ids"].shape[-1]:],
+    skip_special_tokens=True,
+)
+print("Decoded answer:", decoded)
+print("Smoke test complete.")
+PY
+
+echo "End time: $(date)"
