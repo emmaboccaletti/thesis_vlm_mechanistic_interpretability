@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Download Qwen3-VL-8B-Instruct to scratch-shared and expose it via a stable
+# home-directory symlink for existing analysis scripts.
+
+#SBATCH --partition=rome
+#SBATCH --job-name=DLQwen3VL
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --time=04:00:00
+#SBATCH --mem=8G
+#SBATCH --output=/home/eboccaletti/models/job_outputs/slurm_download_qwen3vl_%A.out
+
+set -euo pipefail
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+# Activate the environment that already works for the existing download helper.
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate initial_env
+
+SCRATCH_MODEL_DIR="/scratch-shared/eboccaletti/models/Qwen3-VL-8B-Instruct"
+SCRATCH_HF_HOME="/scratch-shared/eboccaletti/hf_cache"
+HOME_LINK="/home/eboccaletti/models/qwen3vl8b"
+
+mkdir -p "${SCRATCH_MODEL_DIR}"
+mkdir -p "${SCRATCH_HF_HOME}"
+mkdir -p /home/eboccaletti/models
+
+export HF_HOME="${SCRATCH_HF_HOME}"
+
+echo "=== Downloading Qwen3-VL-8B-Instruct ==="
+echo "Scratch model dir: ${SCRATCH_MODEL_DIR}"
+echo "HF_HOME: ${HF_HOME}"
+echo "Home symlink: ${HOME_LINK}"
+
+python -u /home/eboccaletti/models/download_model.py \
+  Qwen/Qwen3-VL-8B-Instruct \
+  --output_dir "${SCRATCH_MODEL_DIR}" \
+  --hf_home "${SCRATCH_HF_HOME}"
+
+ln -sfn "${SCRATCH_MODEL_DIR}" "${HOME_LINK}"
+
+echo "=== Download complete ==="
+echo "Symlink now points to: $(readlink -f "${HOME_LINK}")"
+echo "Contents:"
+ls -lh "${SCRATCH_MODEL_DIR}" | head -n 20
