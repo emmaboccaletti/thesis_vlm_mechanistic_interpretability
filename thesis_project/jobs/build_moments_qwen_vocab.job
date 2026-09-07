@@ -1,0 +1,31 @@
+#!/bin/bash
+# Build the full-corpus MOMENTS same-token-length vocabulary for Qwen.
+# This scans the resolved MOMENTS tree on Snellius and writes a cache with
+# both flat length buckets and coarse POS buckets.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_vocab
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/build_moments_qwen_vocab_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/build_moments_qwen_vocab_%j.err
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Build MOMENTS Qwen vocab ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+
+python /home/eboccaletti/thesis_project/data_generation/build_moments_qwen_vocab.py \
+  --moments_root /scratch-shared/eboccaletti/MOMENTS \
+  --tokenizer_path /home/eboccaletti/models/qwen2vl7b \
+  --output_path /home/eboccaletti/reproducing_code/vlm-circuits-analysis/data/moments_goal/qwen_same_token_length_vocab_full_pos.json
+
+echo "End time: $(date)"

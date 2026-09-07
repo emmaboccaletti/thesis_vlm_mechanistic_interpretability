@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_Lmoments_base_array
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_moments_language_only_baselines_eval_%A_%a.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_moments_language_only_baselines_eval_%A_%a.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=00:30:00
+#SBATCH --array=0-24
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+python inspect_moments_faithfulness_baselines.py \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --percentages 0.3 0.5 0.9 \
+  --eval_prompt_index "${SLURM_ARRAY_TASK_ID}" \
+  --output_csv "data/moments_goal/results/qwen2-7b-vl-instruct/language_only_ld_baselines_eval_${SLURM_ARRAY_TASK_ID}.csv"
