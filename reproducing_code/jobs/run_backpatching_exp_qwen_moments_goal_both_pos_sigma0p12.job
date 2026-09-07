@@ -1,0 +1,39 @@
+#!/bin/bash
+# MOMENTS goal backpatching experiment for the regenerated POS-aware sigma0p12 dataset.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_Bmom_pos_bkpt
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_backpatching_exp_gpu_h100_moments_goal_both_POS_sigma0p12_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_backpatching_exp_gpu_h100_moments_goal_both_POS_sigma0p12_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=24:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_DIR="data/moments_goal/results/qwen2-7b-vl-instruct_both_POS_sigma0p12_nap_ig=5/backpatching"
+mkdir -p "${RESULT_DIR}"
+
+echo "=== Qwen2 MOMENTS goal backpatching ==="
+echo "=== Counterfactual mode: both; POS-aware sigma0p12 dataset ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python script_backpatching_experiment.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode both \
+  --src_layer_range 6 19 \
+  --dst_layer_range 0 13 \
+  --output_dir "${RESULT_DIR}"
+
+echo "Saved mode-specific result directory: ${RESULT_DIR}"
+echo "End time: $(date)"
