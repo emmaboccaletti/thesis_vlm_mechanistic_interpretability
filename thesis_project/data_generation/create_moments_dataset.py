@@ -207,6 +207,15 @@ def parse_args() -> argparse.Namespace:
         help="Standard deviation of Gaussian noise for vision corruptions.",
     )
     parser.add_argument(
+        "--extra_noise_sigmas",
+        default="",
+        help=(
+            "Optional comma-separated list of additional Gaussian noise levels "
+            "to materialize as composite artifacts for later inspection. "
+            "These do not change the main CSV rows."
+        ),
+    )
+    parser.add_argument(
         "--language_perturbation_fraction",
         type=float,
         default=0.10,
@@ -241,6 +250,25 @@ def parse_args() -> argparse.Namespace:
             "Optional path to a cached JSON vocabulary of same-token-length "
             "replacement words. If omitted, the builder writes one next to the "
             "generated MOMENTS CSVs."
+        ),
+    )
+    parser.add_argument(
+        "--language_vocab_source",
+        choices=("annotated", "full"),
+        default="full",
+        help=(
+            "Where to build the replacement vocabulary from. 'annotated' uses "
+            "only the rows being generated; 'full' scans the full MOMENTS "
+            "transcript tree."
+        ),
+    )
+    parser.add_argument(
+        "--language_vocab_pos_mode",
+        choices=("off", "coarse"),
+        default="coarse",
+        help=(
+            "Whether to prefer coarse POS buckets when sampling replacements. "
+            "If 'off', only length buckets are used."
         ),
     )
     parser.add_argument(
@@ -455,6 +483,15 @@ def _normalize_word_surface(text: str) -> str:
     return text.strip().lower()
 
 
+def _normalize_coarse_pos(token) -> str:
+    coarse = token.pos_ or "X"
+    if coarse in {"NOUN", "PROPN", "VERB", "ADJ", "ADV"}:
+        return coarse
+    if coarse in {"AUX"}:
+        return "VERB"
+    return "OTHER"
+
+
 def _bucket_key_for_length(length: int) -> str:
     return str(int(length))
 
@@ -462,12 +499,17 @@ def _bucket_key_for_length(length: int) -> str:
 def build_language_replacement_vocab(
     clean_records: Sequence[Dict[str, object]],
     tokenizer,
+    *,
+    moments_root: Optional[str] = None,
+    vocab_source: str = "annotated",
 ) -> Dict[str, object]:
     """
-    Build a fixed, model-dependent word pool from the local MOMENTS dataset.
+    Build a fixed, model-dependent word pool from the MOMENTS corpus.
 
     The pool keeps only words that are valid transcript words and groups them by
-    exact tokenizer length under the supplied tokenizer.
+    exact tokenizer length under the supplied tokenizer. When `vocab_source` is
+    `full`, the builder scans the full transcript tree instead of only the rows
+    used for the current CSVs.
     """
     nlp = load_spacy_nlp()
     if nlp is None:
@@ -475,7 +517,11 @@ def build_language_replacement_vocab(
             "spaCy is required to build the MOMENTS language replacement vocab"
         )
 
+    if vocab_source not in {"annotated", "full"}:
+        raise ValueError(f"Unknown vocab_source: {vocab_source}")
+
     vocab: Dict[str, set] = defaultdict(set)
+    pos_vocab: Dict[str, Dict[str, set]] = defaultdict(lambda: defaultdict(set))
 
     def add_token(token) -> None:
         if not _token_is_replacement_candidate(token):
@@ -486,19 +532,60 @@ def build_language_replacement_vocab(
         length = _token_length(tokenizer, surface)
         if length <= 0:
             return
-        vocab[_bucket_key_for_length(length)].add(surface)
+        bucket = _bucket_key_for_length(length)
+        vocab[bucket].add(surface)
+        pos_vocab[_normalize_coarse_pos(token)][bucket].add(surface)
 
-    for record in clean_records:
-        for text_field in ("local_text", "global_text"):
-            text = str(record.get(text_field, "")).strip()
-            if not text:
+    if vocab_source == "full":
+        if not moments_root:
+            raise ValueError("moments_root is required when vocab_source='full'")
+
+        moments_root_path = Path(moments_root).resolve()
+        if not moments_root_path.exists():
+            raise FileNotFoundError(f"Missing MOMENTS root: {moments_root_path}")
+
+        for json_path in sorted(moments_root_path.rglob("*.json")):
+            if not json_path.is_file():
                 continue
-            doc = nlp(text)
-            for token in doc:
-                add_token(token)
+            with json_path.open("r") as f:
+                data = json.load(f)
+            if not isinstance(data, dict):
+                continue
+            for field in ("local", "global"):
+                text = str(data.get(field, "")).strip()
+                if not text:
+                    continue
+                doc = nlp(text)
+                for token in doc:
+                    add_token(token)
+    else:
+        for record in clean_records:
+            for text_field in ("local_text", "global_text"):
+                text = str(record.get(text_field, "")).strip()
+                if not text:
+                    continue
+                doc = nlp(text)
+                for token in doc:
+                    add_token(token)
 
     # Convert sets to sorted lists for deterministic sampling and JSON output.
-    return {bucket: sorted(words) for bucket, words in sorted(vocab.items(), key=lambda item: int(item[0]))}
+    buckets_out = {
+        bucket: sorted(words)
+        for bucket, words in sorted(vocab.items(), key=lambda item: int(item[0]))
+    }
+    pos_buckets_out = {
+        pos: {
+            bucket: sorted(words)
+            for bucket, words in sorted(length_map.items(), key=lambda item: int(item[0]))
+        }
+        for pos, length_map in sorted(pos_vocab.items())
+    }
+    return {
+        "buckets": buckets_out,
+        "pos_buckets": pos_buckets_out,
+        "vocab_source": vocab_source,
+        "moments_root": moments_root or "",
+    }
 
 
 def load_or_build_language_replacement_vocab(
@@ -506,6 +593,8 @@ def load_or_build_language_replacement_vocab(
     clean_records: Sequence[Dict[str, object]],
     tokenizer_path: str,
     vocab_path: str,
+    moments_root: str,
+    vocab_source: str,
 ) -> Dict[str, object]:
     if not tokenizer_path:
         raise ValueError(
@@ -516,10 +605,15 @@ def load_or_build_language_replacement_vocab(
         with open(vocab_path, "r") as f:
             payload = json.load(f)
         if payload.get("tokenizer_path") == tokenizer_path and "buckets" in payload:
-            return payload["buckets"]
+            return payload
 
     tokenizer = load_language_tokenizer(tokenizer_path)
-    vocab = build_language_replacement_vocab(clean_records, tokenizer)
+    vocab = build_language_replacement_vocab(
+        clean_records,
+        tokenizer,
+        moments_root=moments_root,
+        vocab_source=vocab_source,
+    )
 
     if vocab_path:
         vocab_dir = os.path.dirname(vocab_path)
@@ -529,7 +623,7 @@ def load_or_build_language_replacement_vocab(
             json.dump(
                 {
                     "tokenizer_path": tokenizer_path,
-                    "buckets": vocab,
+                    **vocab,
                 },
                 f,
                 indent=2,
@@ -538,11 +632,23 @@ def load_or_build_language_replacement_vocab(
     return vocab
 
 
-def _replacement_bucket_for_token(token, vocab: Dict[str, object], tokenizer) -> List[str]:
+def _replacement_bucket_for_token(
+    token,
+    vocab: Dict[str, object],
+    tokenizer,
+    use_pos_buckets: bool = True,
+) -> List[str]:
     length = _token_length(tokenizer, token.text.strip())
     if length <= 0:
         return []
-    bucket = vocab.get(_bucket_key_for_length(length), [])
+    bucket = []
+    if use_pos_buckets:
+        pos_buckets = vocab.get("pos_buckets", {})
+        pos = _normalize_coarse_pos(token)
+        if isinstance(pos_buckets, dict):
+            bucket = pos_buckets.get(pos, {}).get(_bucket_key_for_length(length), [])
+    if not bucket:
+        bucket = vocab.get("buckets", {}).get(_bucket_key_for_length(length), [])
     if not isinstance(bucket, list):
         return []
     return bucket
@@ -557,6 +663,7 @@ def _sample_dataset_replacement_for_token(
     vocab: Dict[str, object],
     tokenizer,
     clean_prompt: str,
+    use_pos_buckets: bool = True,
 ) -> Optional[Tuple[str, str, str]]:
     """
     Choose a deterministic same-length replacement from the fixed dataset pool.
@@ -564,7 +671,7 @@ def _sample_dataset_replacement_for_token(
     We walk the candidate list in a hashed order and only accept replacements
     that keep the full prompt tokenized length unchanged.
     """
-    candidates = _replacement_bucket_for_token(token, vocab, tokenizer)
+    candidates = _replacement_bucket_for_token(token, vocab, tokenizer, use_pos_buckets=use_pos_buckets)
     if not candidates:
         return None
 
@@ -1054,6 +1161,7 @@ def replace_one_content_word_with_dataset_sample(
     perturbation_fraction: float,
     vocab: Dict[str, object],
     tokenizer,
+    use_pos_buckets: bool = True,
 ) -> Optional[Tuple[str, str, str]]:
     """
     Replace eligible content words with deterministic dataset-sampled words.
@@ -1072,7 +1180,15 @@ def replace_one_content_word_with_dataset_sample(
         token_length = _token_length(tokenizer, token.text.strip())
         if token_length <= 0:
             continue
-        bucket = vocab.get(_bucket_key_for_length(token_length), [])
+        bucket = []
+        if use_pos_buckets:
+            pos_buckets = vocab.get("pos_buckets", {})
+            if isinstance(pos_buckets, dict):
+                bucket = pos_buckets.get(_normalize_coarse_pos(token), {}).get(
+                    _bucket_key_for_length(token_length), []
+                )
+        if not bucket:
+            bucket = vocab.get("buckets", {}).get(_bucket_key_for_length(token_length), [])
         if not isinstance(bucket, list) or not any(word.lower() != token.text.strip().lower() for word in bucket):
             continue
         sent_idx = sentence_index.get(token.sent.start_char, 1)
@@ -1112,6 +1228,7 @@ def replace_one_content_word_with_dataset_sample(
             vocab=vocab,
             tokenizer=tokenizer,
             clean_prompt=clean_prompt,
+            use_pos_buckets=use_pos_buckets,
         )
         if replacement is None:
             continue
@@ -1150,6 +1267,7 @@ def build_language_counterfactual_text(
     sample_id: str,
     language_vocab: Optional[Dict[str, object]] = None,
     language_tokenizer=None,
+    language_vocab_pos_mode: str = "coarse",
 ) -> Tuple[str, str, str]:
     if mode == "off":
         return global_text or local_text, "language_off", "language_perturbation_disabled"
@@ -1164,6 +1282,7 @@ def build_language_counterfactual_text(
             perturbation_fraction=perturbation_fraction,
             vocab=language_vocab,
             tokenizer=language_tokenizer,
+            use_pos_buckets=language_vocab_pos_mode == "coarse",
         )
     else:
         perturbed = replace_one_content_word_with_antonym(
@@ -1603,6 +1722,7 @@ def build_sample_record_from_clean_record(
     clean_record: Dict[str, object],
     output_dir: str,
     noise_sigma: float,
+    extra_noise_sigmas: Sequence[float],
     write_noisy_frames: bool,
     noisy_frames_root: str,
     language_perturbation_fraction: float,
@@ -1610,6 +1730,7 @@ def build_sample_record_from_clean_record(
     language_mode: str,
     language_vocab: Optional[Dict[str, object]] = None,
     language_tokenizer=None,
+    language_vocab_pos_mode: str = "coarse",
 ) -> Optional[Dict[str, str]]:
     clip_id = str(clean_record["clip_id"])
     clip_type = str(clean_record["clip_type"])
@@ -1641,6 +1762,7 @@ def build_sample_record_from_clean_record(
             sample_id=sample_id,
             language_vocab=language_vocab,
             language_tokenizer=language_tokenizer,
+            language_vocab_pos_mode=language_vocab_pos_mode,
         )
         if mode == "both":
             cf_prompt_state = f"{cf_prompt_state}+vision_noise"
@@ -1669,6 +1791,21 @@ def build_sample_record_from_clean_record(
             noisy_frames_root=noisy_frames_root,
         )
         cf_image_paths = to_repo_relative_path(noisy_path)
+        for extra_sigma in extra_noise_sigmas:
+            if math.isclose(float(extra_sigma), float(noise_sigma)):
+                continue
+            build_shared_vision_noisy_composite_path(
+                task=task,
+                clip_id=clip_id,
+                clip_type=clip_type,
+                group_idx=group_idx,
+                clip_name=clip_name,
+                frame_images=frame_images,
+                output_dir=output_dir,
+                noise_sigma=float(extra_sigma),
+                write_noisy_frames=write_noisy_frames,
+                noisy_frames_root=noisy_frames_root,
+            )
     elif mode == "language_only":
         cf_image_paths = to_repo_relative_path(clean_composite_path)
     elif mode == "random_pair":
@@ -1918,6 +2055,20 @@ def write_csv(path: str, rows: Sequence[Dict[str, str]]) -> None:
             writer.writerow({k: row.get(k, "") for k in CSV_COLUMNS})
 
 
+def parse_float_list(raw: str) -> List[float]:
+    values: List[float] = []
+    for item in str(raw).split(","):
+        item = item.strip()
+        if not item:
+            continue
+        values.append(float(item))
+    return values
+
+
+def format_sigma_tag(sigma: float) -> str:
+    return str(float(sigma)).replace(".", "p")
+
+
 def main() -> None:
     args = parse_args()
     annotations = load_annotation_rows(args.annotations_dir, args.task)
@@ -1928,6 +2079,7 @@ def main() -> None:
 
     task_output_dir = Path(args.output_dir) / f"moments_{args.task}"
     os.makedirs(task_output_dir, exist_ok=True)
+    extra_noise_sigmas = parse_float_list(args.extra_noise_sigmas)
 
     clean_records: List[Dict[str, object]] = []
     mode_to_rows: Dict[str, List[Dict[str, str]]] = {
@@ -1965,6 +2117,8 @@ def main() -> None:
             clean_records=clean_records,
             tokenizer_path=language_tokenizer_path,
             vocab_path=language_vocab_path,
+            moments_root=args.moments_root,
+            vocab_source=args.language_vocab_source,
         )
 
     pairing_processor = None
@@ -1993,6 +2147,7 @@ def main() -> None:
                 clean_record=clean_record,
                 output_dir=args.output_dir,
                 noise_sigma=args.noise_sigma,
+                extra_noise_sigmas=extra_noise_sigmas,
                 write_noisy_frames=not args.no_write_noisy_frames,
                 noisy_frames_root=args.noisy_frames_root,
                 language_perturbation_fraction=args.language_perturbation_fraction,
@@ -2000,6 +2155,7 @@ def main() -> None:
                 language_mode=args.language_perturbation_mode,
                 language_vocab=language_vocab,
                 language_tokenizer=language_tokenizer,
+                language_vocab_pos_mode=args.language_vocab_pos_mode,
             )
             if sample is not None:
                 mode_to_rows[mode].append(sample)
@@ -2029,9 +2185,13 @@ def main() -> None:
         )
 
     for mode, rows in mode_to_rows.items():
-        csv_path = task_output_dir / f"{mode}_data.csv"
-        write_csv(str(csv_path), rows)
-        print(f"{mode}: wrote {len(rows)} rows to {csv_path}")
+        sigma_tag = format_sigma_tag(args.noise_sigma)
+        tagged_csv_path = task_output_dir / f"{mode}_data_sigma{sigma_tag}.csv"
+        legacy_csv_path = task_output_dir / f"{mode}_data.csv"
+        write_csv(str(tagged_csv_path), rows)
+        write_csv(str(legacy_csv_path), rows)
+        print(f"{mode}: wrote {len(rows)} rows to {tagged_csv_path}")
+        print(f"{mode}: wrote legacy compatibility copy to {legacy_csv_path}")
 
 
 if __name__ == "__main__":
