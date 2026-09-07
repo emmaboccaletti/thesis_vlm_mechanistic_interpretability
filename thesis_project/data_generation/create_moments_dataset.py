@@ -637,21 +637,26 @@ def _replacement_bucket_for_token(
     vocab: Dict[str, object],
     tokenizer,
     use_pos_buckets: bool = True,
-) -> List[str]:
+) -> Tuple[List[str], str]:
     length = _token_length(tokenizer, token.text.strip())
     if length <= 0:
-        return []
+        return [], "empty"
     bucket = []
+    bucket_source = "length_bucket"
     if use_pos_buckets:
         pos_buckets = vocab.get("pos_buckets", {})
         pos = _normalize_coarse_pos(token)
         if isinstance(pos_buckets, dict):
             bucket = pos_buckets.get(pos, {}).get(_bucket_key_for_length(length), [])
+            if bucket:
+                bucket_source = f"pos_bucket:{pos}"
     if not bucket:
         bucket = vocab.get("buckets", {}).get(_bucket_key_for_length(length), [])
+        if bucket:
+            bucket_source = "length_bucket_fallback"
     if not isinstance(bucket, list):
-        return []
-    return bucket
+        return [], "empty"
+    return bucket, bucket_source
 
 
 def _sample_dataset_replacement_for_token(
@@ -671,7 +676,9 @@ def _sample_dataset_replacement_for_token(
     We walk the candidate list in a hashed order and only accept replacements
     that keep the full prompt tokenized length unchanged.
     """
-    candidates = _replacement_bucket_for_token(token, vocab, tokenizer, use_pos_buckets=use_pos_buckets)
+    candidates, bucket_source = _replacement_bucket_for_token(
+        token, vocab, tokenizer, use_pos_buckets=use_pos_buckets
+    )
     if not candidates:
         return None
 
@@ -699,7 +706,11 @@ def _sample_dataset_replacement_for_token(
         )
         if _token_length(tokenizer, replacement_prompt) != clean_length:
             continue
-        return replacement_text, source_text, f"dataset_sample:length_{source_length}"
+        return (
+            replacement_text,
+            source_text,
+            f"dataset_sample:{bucket_source}:length_{source_length}",
+        )
     return None
 
 
