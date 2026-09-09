@@ -1,0 +1,41 @@
+#!/bin/bash
+# L/text-only circuit discovery for POS-aware MOMENTS both_data_sigma0p1.csv.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_Bp1_L
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_circuit_gpu_h100_Bmoments_goal_both_POS_sigma0p1_L_ig5_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_circuit_gpu_h100_Bmoments_goal_both_POS_sigma0p1_L_ig5_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_ROOT="data/moments_goal/results/qwen2-7b-vl-instruct_both_POS_sigma0p1_nap_ig=5"
+DATA_FILE="./data/moments_goal/both_data_sigma0p1.csv"
+
+echo "=== Qwen2 MOMENTS goal circuit discovery / eval ==="
+echo "=== Counterfactual mode: both; view: L/text-only ==="
+echo "=== Dataset: ${DATA_FILE} ==="
+echo "=== Result root: ${RESULT_ROOT} ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python script_node_circuit_discovery_and_eval.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode both \
+  --moments_data_file "${DATA_FILE}" \
+  --language_only \
+  --ap_ig_steps 5 \
+  --output_dir "${RESULT_ROOT}"
+
+echo "End time: $(date)"

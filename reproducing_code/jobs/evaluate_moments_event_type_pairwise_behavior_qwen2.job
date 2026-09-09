@@ -1,0 +1,35 @@
+#!/bin/bash
+# Pairwise event-type behavioral baseline for Qwen2 on MOMENTS.
+# Pairs: goal-vs-corner, goal-vs-shot, corner-vs-shot.
+# The evaluator scores constrained two-token choices for each pair.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_MOM_pair_events
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_moments_event_type_pairwise_behavior_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_moments_event_type_pairwise_behavior_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=01:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Qwen2 MOMENTS pairwise event-type evaluation ==="
+echo "=== Pairs: goal/corner, goal/shot, corner/shot ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python evaluate_moments_event_type_pairwise_behavior.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --csv data/moments_goal/vision_only_data.csv \
+  --output_csv data/moments_goal/results/qwen2-7b-vl-instruct/behavior_event_type_pairwise_clean.csv
+
+echo "End time: $(date)"

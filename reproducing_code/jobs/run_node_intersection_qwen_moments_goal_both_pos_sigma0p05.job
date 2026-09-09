@@ -1,0 +1,47 @@
+#!/bin/bash
+# Fixed intersection analysis for Qwen2 MOMENTS both POS-aware sigma0p05.
+# Run after both sigma0p05 node-circuit jobs have completed:
+#   run_node_circuit_qwen_moments_goal_both_pos_sigma0p05_L_ig5.job
+#   run_node_circuit_qwen_moments_goal_both_pos_sigma0p05_VL_ig5.job
+# This reads the sigma-specific score root and writes one compact 1%/3% result.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_Bp05_int
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_intersection_gpu_h100_Bmoments_goal_both_POS_sigma0p05_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_node_intersection_gpu_h100_Bmoments_goal_both_POS_sigma0p05_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_ROOT="data/moments_goal/results/qwen2-7b-vl-instruct_both_POS_sigma0p05_nap_ig=5"
+RESULT_FILE="${RESULT_ROOT}/intersection/faithfulness_nodes_intersection_LD_${SLURM_JOB_ID}.pt"
+
+mkdir -p "$(dirname "${RESULT_FILE}")"
+
+echo "=== Qwen2 MOMENTS goal intersection ==="
+echo "=== Counterfactual mode: both; POS-aware sigma0p05 dataset ==="
+echo "=== Circuit percentages: L=1%, VL=3% ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python script_node_intersection.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode both \
+  --scores_dir "${RESULT_ROOT}" \
+  --output_file "${RESULT_FILE}" \
+  --l_circuit_percentage 0.01 \
+  --vl_circuit_percentage 0.03
+
+echo "Saved sigma0p05 intersection result: ${RESULT_FILE}"
+echo "End time: $(date)"
