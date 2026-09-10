@@ -1,0 +1,22 @@
+#!/bin/bash
+# Standalone Qwen3 baseline both-condition cross-modal size sweep.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen3_cross
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen3_cross_both_sweep_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen3_cross_both_sweep_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=08:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+set -eo pipefail
+source activate vlm_qwen3_reproducing_env
+set -u
+
+bash /home/eboccaletti/reproducing_code/jobs/run_node_cross_qwen_moments_goal_circuit_size_sweep_single.sh \
+  qwen3_both qwen3-8b-vl-instruct /home/eboccaletti/models/qwen3vl8b both \
+  data/moments_goal/both_data.csv \
+  data/moments_goal/results/qwen3-8b-vl-instruct_both_nap_ig=5

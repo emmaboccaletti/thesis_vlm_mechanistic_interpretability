@@ -1,0 +1,22 @@
+#!/bin/bash
+# Standalone Qwen2 POS sigma0.05 cross-modal size sweep.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_cross_s005
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/qwen_cross_sigma0p05_sweep_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/qwen_cross_sigma0p05_sweep_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=08:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+set -eo pipefail
+source activate vlm_qwen_reproducing_env
+set -u
+
+bash /home/eboccaletti/reproducing_code/jobs/run_node_cross_qwen_moments_goal_circuit_size_sweep_single.sh \
+  qwen2_pos_sigma0p05 qwen2-7b-vl-instruct /home/eboccaletti/models/qwen2vl7b both \
+  data/moments_goal/both_data_sigma0p05.csv \
+  data/moments_goal/results/qwen2-7b-vl-instruct_both_POS_sigma0p05_nap_ig=5
