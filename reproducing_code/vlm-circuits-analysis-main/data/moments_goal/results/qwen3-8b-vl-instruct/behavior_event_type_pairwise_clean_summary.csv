@@ -1,0 +1,10 @@
+pair,group,target,n,correct,accuracy
+goal_vs_corner,overall,all,97,50,0.5154639175257731
+goal_vs_corner,target,GOAL,50,37,0.74
+goal_vs_corner,target,CORNER/THROW-IN,47,13,0.2765957446808511
+goal_vs_shot,overall,all,99,48,0.48484848484848486
+goal_vs_shot,target,GOAL,50,32,0.64
+goal_vs_shot,target,SHOT-ON-TARGET,49,16,0.32653061224489793
+corner_vs_shot,overall,all,96,46,0.4791666666666667
+corner_vs_shot,target,CORNER/THROW-IN,47,13,0.2765957446808511
+corner_vs_shot,target,SHOT-ON-TARGET,49,33,0.673469387755102
