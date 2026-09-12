@@ -122,39 +122,30 @@ This covers the full clip evenly.
 Use `local` field from `_v1.json`. It is clean and punctuated.
 Filter: require `similarity >= 0.5`.
 
-### Language corruption
-Swap key football terms in the `local` description. Candidate word pairs:
-- "goal" ↔ "tackle" / "clearance"
-- "shot" ↔ "pass"
-- "scores" ↔ "clears"
-- "penalty" ↔ "corner"
-
-TODO: The final word list to be determined after annotating goal-specific clips.
+### Language corruption — implemented
+Replaces the hand-picked word-pair idea below. `data_generation/build_moments_qwen_vocab.py` builds a cached vocabulary of Qwen-tokenizer same-token-length words, bucketed by coarse POS tag; `data_generation/create_moments_dataset.py` then corrupts a `local` description by replacing eligible words with a random same-length, same-POS-bucket substitute drawn from that vocabulary (`use_pos_buckets=True` by default), so the corrupted prompt tokenizes to the same length as the clean one — required for AP-IG's clean/counterfactual shape alignment (see `reproducing_code/vlm-circuits-analysis/MOMENTS_overview.md`, `moments_utils.py`).
 
 Alternatively, use `global` (raw ASR) as the language-corrupted variant for vision-only circuit discovery.
 
-### Vision corruption
-Add Gaussian noise to all 10 frames (σ ≈ 0.1 on [0,1] normalized pixel values).
+### Vision corruption — implemented
+Gaussian noise is applied to all 10 frames (`apply_gaussian_noise` in `create_moments_dataset.py`), but as a sweep across multiple σ values rather than a single fixed one: the default `--noise_sigma` plus `--extra_noise_sigmas` produce separate sigma-tagged composite/CSV sets (`composites_noisy_sigma{0p05..0p5}`, `{mode}_data_sigma{tag}.csv`), so vision-corruption strength is itself a variable studied across runs, not a single σ ≈ 0.1 choice.
 
 ### Frame sampling
 Extract 10 frames uniformly from each mp4. Formula: `np.linspace(0, total_frames-1, 10, dtype=int)`.
 Keep frame count fixed at 10 across all samples.
 
 ### Counterfactual pairing
-Each important-moment clip is paired with a non-important-moment clip (different answer).
+Each goal clip is paired with a non-goal clip (different answer).
 Follow the same `setup_random_counterfactual_prompts()` pattern as existing tasks.
 
-### Task formulation (binary, starting point)
+### Task formulation
 ```
-Prompt (visual): [10 frames] + local description + "Is this an important moment in the match? Answer yes or no."
-Answer: "yes" for IM, "no" for NIM
+Prompt (visual): [10 frames] + local description + "Is this a goal? Answer yes or no."
+Answer: "yes" for goal clips, "no" otherwise
 ```
-
-### Annotation for goal detection (Step 1)
-No event-type label exists in the JSON — must be inferred from commentary text or manual review.
-Search `local` descriptions for keywords: "goal", "scores", "scored", "net" to shortlist candidates,
-then manually verify by watching clips.
-
+Drawn from the manually annotated event-type subset (`category_annotation.csv`, 50 clips per
+event type). Event-type behavioral comparison (3-way and pairwise, e.g. goal vs. corner) reuses
+this same data, rewriting the question over the `event_type` column at evaluation time.
 ---
 
 ## Derived Data Produced From This Dataset

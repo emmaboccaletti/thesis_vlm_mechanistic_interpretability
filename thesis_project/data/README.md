@@ -13,9 +13,16 @@ The MOMENTS dataset contains video segments from football matches
 annotated with whether they correspond to contextually important moments.
 
 This folder should only contain:
-- symbolic links to datasets
+- symbolic links to raw datasets
+- small derived/annotation data produced from them (e.g. `MOMENTS_categories/`, see below)
 
 Large datasets should **not** be copied into the repository.
+
+## Derived data
+`MOMENTS_categories/` holds the event-type and importance annotations derived from the raw
+MOMENTS clips (manually verified labels, not raw video/audio). See
+[`moments-dataset-notes.md`](moments-dataset-notes.md#derived-data-produced-from-this-dataset)
+for what each file in it contains and how it was produced.
 
 ## MOMENTS dataset
 ```
