@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_VLmoments_goal_vision_only_NodeCircuit_gpu_h100
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_circuit_gpu_h100_VLmoments_goal_vision_only_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_circuit_gpu_h100_VLmoments_goal_vision_only_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+# Activate your environment
+source activate vlm_qwen_reproducing_env
+
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Qwen node circuit: MOMENTS goal job. CF MODE: vision-only (VL) ==="
+echo "=== ap_ig_steps = 5 AND no language_only (aka text only input) flag ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+echo "Working dir: $(pwd)"
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
+nvidia-smi || true
+
+python script_node_circuit_discovery_and_eval.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode vision_only \
+  --ap_ig_steps 5 \
+  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_vision_only_nap_ig=5
+
+echo "End time: $(date)"

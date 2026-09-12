@@ -13,14 +13,12 @@
 #SBATCH --mem=48G
 #SBATCH --output=/home/eboccaletti/models/job_outputs/slurm_smoketest_qwen3vl_%A.out
 
-set -euo pipefail
-
 module purge
 module load 2025
 module load Anaconda3/2025.06-1
 
-source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate vlm_qwen3_reproducing_env
+source activate vlm_qwen3_reproducing_env
+set -euo pipefail
 
 MODEL_PATH="/home/eboccaletti/models/qwen3vl8b"
 

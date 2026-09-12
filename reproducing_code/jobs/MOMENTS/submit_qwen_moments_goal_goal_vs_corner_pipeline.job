@@ -1,0 +1,37 @@
+#!/bin/bash
+# Submit the complete Qwen2 GOAL vs CORNER/THROW-IN pipeline.
+# The analysis jobs start only after both circuit-discovery jobs succeed.
+#SBATCH --partition=gpu_h100
+# Snellius requires a GPU request for jobs submitted to a GPU partition.
+# This lightweight wrapper uses the GPU only while submitting child jobs.
+#SBATCH --gpus=1
+#SBATCH --job-name=submit_goal_corner
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/submit_goal_corner_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/submit_goal_corner_%j.err
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=1G
+#SBATCH --time=00:05:00
+
+set -euo pipefail
+
+JOB_DIR="/home/eboccaletti/reproducing_code/jobs"
+
+language_job="$(sbatch --parsable \
+  "${JOB_DIR}/run_node_circuit_qwen_moments_goal_goal_vs_corner_L_ig5.job")"
+vision_language_job="$(sbatch --parsable \
+  "${JOB_DIR}/run_node_circuit_qwen_moments_goal_goal_vs_corner_VL_ig5.job")"
+
+dependency="afterok:${language_job}:${vision_language_job}"
+
+intersection_job="$(sbatch --parsable --dependency="${dependency}" \
+  "${JOB_DIR}/run_node_intersection_qwen_moments_goal_goal_vs_corner.job")"
+cross_job="$(sbatch --parsable --dependency="${dependency}" \
+  "${JOB_DIR}/run_node_cross_qwen_moments_goal_goal_vs_corner.job")"
+backpatching_job="$(sbatch --parsable --dependency="${dependency}" \
+  "${JOB_DIR}/run_backpatching_exp_qwen_moments_goal_goal_vs_corner.job")"
+
+echo "Submitted language circuit job: ${language_job}"
+echo "Submitted vision-language circuit job: ${vision_language_job}"
+echo "Submitted intersection job: ${intersection_job}"
+echo "Submitted cross-modal job: ${cross_job}"
+echo "Submitted backpatching job: ${backpatching_job}"

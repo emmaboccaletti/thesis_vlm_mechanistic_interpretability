@@ -5,7 +5,7 @@ This script scans the full MOMENTS transcript tree, not just the curated task
 annotations, and collects replacement words from the `local` and `global`
 transcript fields.
 
-The output preserves the current flat `buckets` mapping used by the current
+The output preserves the legacy flat `buckets` mapping used by the current
 dataset builder, and adds `pos_buckets` so the replacement pool is also
 organized by coarse POS category (noun, verb, adjective, etc.).
 """

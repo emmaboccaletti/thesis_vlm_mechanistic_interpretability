@@ -1,0 +1,52 @@
+#!/bin/bash
+# Table 5 intersection sweep for Qwen2 GOAL vs CORNER/THROW-IN.
+# Starts after the language and vision-language circuits complete.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+# The language circuit (26552095) is complete; wait for the VL circuit.
+#SBATCH --dependency=afterok:26552096
+#SBATCH --job-name=Qwen_gvc_isweep
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_intersection_goal_corner_sweep_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_intersection_goal_corner_sweep_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=08:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_ROOT="data/moments_goal/results/qwen2-7b-vl-instruct_goal_vs_corner_nap_ig=5"
+DATA_FILE="data/moments_goal/goal_vs_corner_data.csv"
+SWEEP_ROOT="${RESULT_ROOT}/intersection/table5_sweep"
+PAIRS=(
+  "0.01 0.03 l001_vl003"
+  "0.02 0.05 l002_vl005"
+  "0.05 0.08 l005_vl008"
+  "0.10 0.10 l010_vl010"
+  "0.20 0.30 l020_vl030"
+  "0.30 0.50 l030_vl050"
+  "0.50 0.70 l050_vl070"
+  "0.70 0.90 l070_vl090"
+)
+
+for pair in "${PAIRS[@]}"; do
+  read -r L_PCT VL_PCT TAG <<< "${pair}"
+  RESULT_FILE="${SWEEP_ROOT}/${TAG}/faithfulness_nodes_intersection_LD_${SLURM_JOB_ID}.pt"
+  mkdir -p "$(dirname "${RESULT_FILE}")"
+  python script_node_intersection.py \
+    --model_name qwen2-7b-vl-instruct \
+    --model_path /home/eboccaletti/models/qwen2vl7b \
+    --task_name moments_goal \
+    --moments_cf_mode both \
+    --moments_data_file "${DATA_FILE}" \
+    --moments_total_prompt_count 96 \
+    --scores_dir "${RESULT_ROOT}" \
+    --output_file "${RESULT_FILE}" \
+    --l_circuit_percentage "${L_PCT}" \
+    --vl_circuit_percentage "${VL_PCT}"
+done

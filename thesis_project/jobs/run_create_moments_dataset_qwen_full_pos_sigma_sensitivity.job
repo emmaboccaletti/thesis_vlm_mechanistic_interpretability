@@ -1,0 +1,44 @@
+#!/bin/bash
+# Generate additional POS-aware MOMENTS goal CSVs for sigma-sensitivity checks.
+# --preserve_default_csv ensures sigma generation does not overwrite default
+# files such as both_data.csv, so it is safe while other jobs use sigma0p12.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_momcsv_sig
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/create_moments_dataset_qwen_full_pos_sigma_sensitivity_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/create_moments_dataset_qwen_full_pos_sigma_sensitivity_%j.err
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Create MOMENTS goal POS-aware sigma-sensitivity CSVs ==="
+echo "=== Sigmas: 0.05 0.1 0.2 0.5 ==="
+echo "=== preserve_default_csv: sigma generation will not overwrite both_data.csv ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+
+for SIGMA in 0.05 0.1 0.2 0.5; do
+  echo "Generating sigma=${SIGMA}"
+  python /home/eboccaletti/thesis_project/data_generation/create_moments_dataset.py \
+    --task goal \
+    --moments_root /scratch-shared/eboccaletti/MOMENTS \
+    --frames_root /scratch-shared/eboccaletti/MOMENTS_frames/frames \
+    --output_dir /home/eboccaletti/reproducing_code/vlm-circuits-analysis/data \
+    --language_perturbation_mode dataset_sample \
+    --language_vocab_source full \
+    --language_vocab_pos_mode coarse \
+    --language_tokenizer_path /home/eboccaletti/models/qwen2vl7b \
+    --language_vocab_path /home/eboccaletti/reproducing_code/vlm-circuits-analysis/data/moments_goal/qwen_same_token_length_vocab_full_pos.json \
+    --noise_sigma "${SIGMA}" \
+    --preserve_default_csv
+done
+
+echo "End time: $(date)"

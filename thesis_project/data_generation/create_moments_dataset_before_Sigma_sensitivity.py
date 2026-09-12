@@ -216,14 +216,6 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--preserve_default_csv",
-        action="store_true",
-        help=(
-            "Only write sigma-tagged CSVs, and do not overwrite default CSVs "
-            "such as both_data.csv."
-        ),
-    )
-    parser.add_argument(
         "--language_perturbation_fraction",
         type=float,
         default=0.10,
@@ -1990,7 +1982,7 @@ def build_random_pair_rows(
     """
     Build MOMENTS random-pair rows from clean records.
 
-    The pairing strategy can either be the original answer-only pairing or a
+    The pairing strategy can either be the legacy answer-only pairing or a
     length-bucketed variant based on heuristic or exact tokenized lengths.
     """
     stats = {
@@ -2206,12 +2198,11 @@ def main() -> None:
     for mode, rows in mode_to_rows.items():
         sigma_tag = format_sigma_tag(args.noise_sigma)
         tagged_csv_path = task_output_dir / f"{mode}_data_sigma{sigma_tag}.csv"
-        default_csv_path = task_output_dir / f"{mode}_data.csv"
+        legacy_csv_path = task_output_dir / f"{mode}_data.csv"
         write_csv(str(tagged_csv_path), rows)
+        write_csv(str(legacy_csv_path), rows)
         print(f"{mode}: wrote {len(rows)} rows to {tagged_csv_path}")
-        if not args.preserve_default_csv:
-            write_csv(str(default_csv_path), rows)
-            print(f"{mode}: wrote default CSV copy to {default_csv_path}")
+        print(f"{mode}: wrote legacy compatibility copy to {legacy_csv_path}")
 
 
 if __name__ == "__main__":

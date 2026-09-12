@@ -1,0 +1,33 @@
+#!/bin/bash
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_Lmoments_baselines
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_moments_language_only_baselines_03_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_moments_language_only_baselines_03_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=00:30:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Qwen node circuit: MOMENTS goal language only baseline diagnostic 30% ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+echo "Working dir: $(pwd)"
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
+nvidia-smi || true
+
+python inspect_moments_faithfulness_baselines.py \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --percentages 0.3 \
+  --output_csv data/moments_goal/results/qwen2-7b-vl-instruct/language_only_ld_baselines_03.csv
+
+echo "End time: $(date)"

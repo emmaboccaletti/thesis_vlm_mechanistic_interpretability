@@ -1,0 +1,27 @@
+#!/bin/bash
+#SBATCH --partition=rome
+#SBATCH --job-name=CheckMOMENTSDropRates
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/check_moments_drop_rates_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/check_moments_drop_rates_%j.err
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=00:20:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate vlm_qwen_reproducing_env
+
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== MOMENTS token-length drop-rate check ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+echo "Working dir: $(pwd)"
+
+python check_moments_drop_rates.py --max_images 1
+
+echo "End time: $(date)"

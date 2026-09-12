@@ -1,0 +1,40 @@
+#!/bin/bash
+# Multimodal both condition: transcript and image change.
+# Do not pass --language_only.
+# Archive any existing active vl result files before submitting this job.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_both_MM_ig5
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_circuit_gpu_h100_Bmoments_goal_both_multimodal_ig5_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_circuit_gpu_h100_Bmoments_goal_both_multimodal_ig5_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Qwen node circuit: MOMENTS goal job. CF MODE: both (VL) ==="
+echo "=== Transcript and image counterfactuals (no language_only flag) AND ap_ig_steps = 5 ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+echo "Working dir: $(pwd)"
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
+nvidia-smi || true
+
+python script_node_circuit_discovery_and_eval.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode both \
+  --ap_ig_steps 5 \
+  --output_dir data/moments_goal/results/qwen2-7b-vl-instruct_both_nap_ig=5
+
+echo "End time: $(date)"

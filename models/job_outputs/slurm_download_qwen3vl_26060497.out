@@ -1,0 +1,67 @@
+============================================================================================== 
+Warning! Mixing Conda and module environments may lead to corruption of the
+user environment. 
+We do not recommend users mixing those two environments unless absolutely
+necessary. Note that 
+SURF does not provide any support for Conda environment.
+For more information, please refer to our software policy page:
+https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius#SoftwarepolicySnellius-UseofAnacondaandMinicondaenvironmentsonSnellius 
+
+Remember that many packages have already been installed on the system and can
+be loaded using 
+the 'module load <package__name>' command. If you are uncertain if a package is
+already available 
+on the system, please use 'module avail' or 'module spider' to search for it.
+============================================================================================== 
+=== Downloading Qwen3-VL-8B-Instruct ===
+Scratch model dir: /scratch-shared/eboccaletti/models/Qwen3-VL-8B-Instruct
+HF_HOME: /scratch-shared/eboccaletti/hf_cache
+Home symlink: /home/eboccaletti/models/qwen3vl8b
+Repo ID:    Qwen/Qwen3-VL-8B-Instruct
+Output dir: /scratch-shared/eboccaletti/models/Qwen3-VL-8B-Instruct
+HF_HOME:    /scratch-shared/eboccaletti/hf_cache
+/home/eboccaletti/.conda/envs/initial_env/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:206: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `snapshot_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Fetching 16 files:   0%|          | 0/16 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 16 files:   6%|▋         | 1/16 [00:00<00:03,  4.05it/s]Fetching 16 files:  44%|████▍     | 7/16 [00:11<00:15,  1.71s/it]Fetching 16 files: 100%|██████████| 16/16 [00:11<00:00,  1.38it/s]
+
+Download complete.
+Saved to: /scratch-shared/eboccaletti/models/Qwen3-VL-8B-Instruct
+
+Top-level contents:
+  .cache
+  .gitattributes
+  README.md
+  chat_template.json
+  config.json
+  generation_config.json
+  merges.txt
+  model-00001-of-00004.safetensors
+  model-00002-of-00004.safetensors
+  model-00003-of-00004.safetensors
+  model-00004-of-00004.safetensors
+  model.safetensors.index.json
+  preprocessor_config.json
+  tokenizer.json
+  tokenizer_config.json
+  video_preprocessor_config.json
+  vocab.json
+=== Download complete ===
+Symlink now points to: /gpfs/scratch1/shared/eboccaletti/models/Qwen3-VL-8B-Instruct
+Contents:
+total 17G
+-rw-r-----. 1 eboccaletti eboccaletti 7.0K Aug 26 12:38 README.md
+-rw-r-----. 1 eboccaletti eboccaletti 5.4K Aug 26 12:38 chat_template.json
+-rw-r-----. 1 eboccaletti eboccaletti 1.5K Aug 26 12:38 config.json
+-rw-r-----. 1 eboccaletti eboccaletti  269 Aug 26 12:38 generation_config.json
+-rw-r-----. 1 eboccaletti eboccaletti 1.6M Aug 26 12:38 merges.txt
+-rw-r-----. 1 eboccaletti eboccaletti 4.6G Aug 26 12:39 model-00001-of-00004.safetensors
+-rw-r-----. 1 eboccaletti eboccaletti 4.6G Aug 26 12:39 model-00002-of-00004.safetensors
+-rw-r-----. 1 eboccaletti eboccaletti 4.7G Aug 26 12:39 model-00003-of-00004.safetensors
+-rw-r-----. 1 eboccaletti eboccaletti 2.6G Aug 26 12:39 model-00004-of-00004.safetensors
+-rw-r-----. 1 eboccaletti eboccaletti  67K Aug 26 12:38 model.safetensors.index.json
+-rw-r-----. 1 eboccaletti eboccaletti  390 Aug 26 12:38 preprocessor_config.json
+-rw-r-----. 1 eboccaletti eboccaletti 6.8M Aug 26 12:38 tokenizer.json
+-rw-r-----. 1 eboccaletti eboccaletti  11K Aug 26 12:38 tokenizer_config.json
+-rw-r-----. 1 eboccaletti eboccaletti  385 Aug 26 12:38 video_preprocessor_config.json
+-rw-r-----. 1 eboccaletti eboccaletti 2.7M Aug 26 12:38 vocab.json

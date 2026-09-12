@@ -1,0 +1,27 @@
+name: vlm_qwen_reproducing_env
+channels:
+  - defaults
+dependencies:
+  - sentencepiece
+  - tqdm
+  - torchaudio
+  - pytorch-cuda=12.1
+  - datasets
+  - ninja
+  - torchvision
+  - scikit-learn
+  - scipy
+  - python=3.11
+  - accelerate
+  - jupyter
+  - pandas
+  - pip
+  - pytorch=2.5
+  - ipykernel
+  - pillow
+  - git
+  - matplotlib
+  - cmake
+  - protobuf
+  - git-lfs
+prefix: /home/eboccaletti/.conda/envs/vlm_qwen_reproducing_env

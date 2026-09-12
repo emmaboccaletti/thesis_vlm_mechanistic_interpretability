@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Download Qwen3-VL-8B-Instruct to scratch-shared and expose it via a stable
-# home-directory symlink for existing analysis scripts.
+# Download Qwen3-VL-8B-Instruct to scratch-shared and create symlink for existing analysis scripts.
 
 #SBATCH --partition=rome
 #SBATCH --job-name=DLQwen3VL

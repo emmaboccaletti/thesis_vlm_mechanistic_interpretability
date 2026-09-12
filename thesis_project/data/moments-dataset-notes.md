@@ -157,6 +157,37 @@ then manually verify by watching clips.
 
 ---
 
+## Derived Data Produced From This Dataset
+
+Two directories under `thesis_project/data/` (siblings of `MOMENTS/`) contain 
+data derived from the raw dataset described above:
+
+### `MOMENTS_frames/`
+Contains the extracted frames described in "Frame sampling" above — 10 evenly 
+spaced frames per clip, sampled uniformly across each clip's duration.
+
+### `MOMENTS_categories/`
+Contains the event-type category annotations produced from the manual 
+annotation process described in "Annotation for goal detection" above. 
+Covers three event types: GOAL, CORNER/THROW-IN, and SHOT-ON-TARGET.
+
+The authoritative file is **`category_annotations.json`**, containing the 
+final annotations from Surikuchi's annotated dataset, split into IMs 
+(important moments — genuinely depicting the event) and NIMs (non-important 
+moments — superficial keyword matches that don't actually depict the event).
+
+The remaining CSVs in this folder are earlier pipeline stages kept for 
+provenance:
+- `candidates_events.csv` — the initial keyword/similarity-based screening 
+  pass referenced in "Annotation for goal detection" (370 candidates, 
+  matched via regex against commentary keywords like "goal"/"scored"). 
+- `category_annotation.csv` — the annotated csv resutling from category_annotations.json   (150 clips, 
+  50 per event type).
+- `goals_annotation.csv` — a goal-specific annotation 
+  (103 clips).
+
+---
+
 ## Notes
 
 - `non-important-moments` clips use `NIM_*.mp4` naming (not `IM_*.mp4`)

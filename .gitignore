@@ -1,0 +1,30 @@
+# Ignore all hidden/system files by default
+.*
+
+# But allow this file itself
+!.gitignore
+
+# Allow selected project folders
+!reproducing_code/
+!thesis_project/
+!models/
+
+# Allow specific standalone files if wanted
+!qwen.txt
+
+/reproducing_code/job_outputs/
+vlm-circuits-analysis-BACKUP.tar.gz
+zenodo_response.json
+zenodo_upload_data.tar.gz
+zenodo_upload_output.log
+zenodo_upload_verbose.log
+thesis_project/data/MOMENTS
+thesis_project/data/MOMENTS_frames/frames/
+test_upload.txt
+
+models/gemma3_12b_it
+models/pixtral_12b_2409
+models/qwen2vl7b/*
+!models/qwen2vl7b/.gitkeep
+models/qwen3vl8b/*
+!models/qwen3vl8b/.gitkeep

@@ -1,0 +1,39 @@
+#!/bin/bash
+# Clean three-way event-type behavioral baseline for Qwen2 on MOMENTS.
+# Classes: GOAL, CORNER/THROW-IN, and SHOT-ON-TARGET.
+# The evaluator scores constrained choices: goal, corner, and shot.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_MOMENTS_events
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_moments_event_type_behavior_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_moments_event_type_behavior_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=00:30:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Qwen2 MOMENTS clean three-way event-type evaluation ==="
+echo "=== Classes: GOAL, CORNER/THROW-IN, SHOT-ON-TARGET ==="
+echo "=== Primary metric: constrained goal/corner/shot accuracy ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python evaluate_moments_event_type_behavior.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --csv data/moments_goal/vision_only_data.csv \
+  --output_csv data/moments_goal/results/qwen2_behavioral_evaluation/behavior_event_type_clean.csv
+
+# Optional sensitivity analysis: add this flag to the command above.
+#   --check_counterfactual_alignment
+
+echo "End time: $(date)"

@@ -1,0 +1,25 @@
+#!/bin/bash
+# Clean Qwen2 goal/no-goal evaluation on the POS-aware sigma=0.5 dataset.
+# This evaluates behavior only; it does not run circuit analysis.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen2_MOM_sig05
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen2_moments_goal_behavior_sigma0p5_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen2_moments_goal_behavior_sigma0p5_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=01:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+python evaluate_moments_behavior.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --csv data/moments_goal/both_data_sigma0p5.csv \
+  --output_csv data/moments_goal/results/qwen2-7b-vl-instruct/behavior_clean_sigma0p5.csv

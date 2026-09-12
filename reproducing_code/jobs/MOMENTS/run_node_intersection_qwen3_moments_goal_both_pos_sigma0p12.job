@@ -1,0 +1,45 @@
+#!/bin/bash
+# Qwen3 MOMENTS goal fixed intersection analysis.
+# Uses the  MOMENTS both_data.csv currently on Snellius.
+# Scores are read from the completed Qwen3 both result root.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen3_Bpos_int
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen3_node_intersection_gpu_h100_Bmoments_goal_both_POS_sigma0p12_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen3_node_intersection_gpu_h100_Bmoments_goal_both_POS_sigma0p12_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen3_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_ROOT="data/moments_goal/results/qwen3-8b-vl-instruct_both_nap_ig=5"
+RESULT_FILE="${RESULT_ROOT}/intersection/faithfulness_nodes_intersection_LD_${SLURM_JOB_ID}.pt"
+
+mkdir -p "$(dirname "${RESULT_FILE}")"
+
+echo "=== Qwen3 MOMENTS goal intersection ==="
+echo "=== Counterfactual mode: both;  POS/sigma0p12 CSVs ==="
+echo "=== Circuit percentages: L=1%, VL=3% ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python script_node_intersection.py \
+  --model_name qwen3-8b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen3vl8b \
+  --task_name moments_goal \
+  --moments_cf_mode both \
+  --scores_dir "${RESULT_ROOT}" \
+  --output_file "${RESULT_FILE}" \
+  --l_circuit_percentage 0.01 \
+  --vl_circuit_percentage 0.03
+
+echo "Saved Qwen3 result: ${RESULT_FILE}"
+echo "End time: $(date)"

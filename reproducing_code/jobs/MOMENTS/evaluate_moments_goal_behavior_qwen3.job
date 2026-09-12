@@ -1,0 +1,40 @@
+#!/bin/bash
+# Clean behavioral baseline for Qwen3 on MOMENTS goal/no-goal.
+# This is a forced-choice yes/no evaluation, not circuit analysis.
+# Uses the standard MOMENTS CSV so the Qwen3 tokenizer can be checked against
+# the existing Qwen2-derived prompt layout.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen3_MOMENTS_behavior
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen3_moments_goal_behavior_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen3_moments_goal_behavior_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=64G
+#SBATCH --time=00:10:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate vlm_qwen3_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+echo "=== Qwen3 MOMENTS goal clean behavioral evaluation ==="
+echo "=== Primary metric: constrained yes/no accuracy ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python evaluate_moments_behavior.py \
+  --model_name qwen3-vl-8b-instruct \
+  --model_path /home/eboccaletti/models/qwen3vl8b \
+  --torch_dtype bfloat16 \
+  --csv data/moments_goal/both_data.csv \
+  --output_csv data/moments_goal/results/qwen3-vl-8b-instruct/behavior_clean_both.csv
+
+# Optional stricter variant: add this flag to the command above if desired.
+#   --check_counterfactual_alignment
+
+echo "End time: $(date)"

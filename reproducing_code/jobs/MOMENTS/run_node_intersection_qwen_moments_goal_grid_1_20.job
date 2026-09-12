@@ -1,0 +1,57 @@
+#!/bin/bash
+# Exhaustive 1-20% circuit grid for the MOMENTS goal task.
+# This is the broadest retained-fraction search in the current thesis plan.
+# The counterfactual mode can be selected via MOMENTS_CF_MODE (default: both).
+# Each (L, VL) pair writes to its own output file.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_MOMENTS_grid
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_intersection_gpu_h100_moments_goal_grid_1_20_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_intersection_gpu_h100_moments_goal_grid_1_20_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=04:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+CF_MODE="${MOMENTS_CF_MODE:-both}"
+SCORES_DIR="data/moments_goal/results/qwen2-7b-vl-instruct_${CF_MODE}_nap_ig=5"
+SWEEP_ROOT="data/moments_goal/results/qwen2-7b-vl-instruct_${CF_MODE}_nap_ig=5/intersection/grid_1_20"
+
+echo "=== Qwen2 MOMENTS goal intersection grid ==="
+echo "=== Counterfactual mode: ${CF_MODE}; L/VL views retained ==="
+echo "=== Sweep pairs: 0.01/0.01 through 0.20/0.20 ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+for L_PCT in $(seq 1 20); do
+  for VL_PCT in $(seq 1 20); do
+    L_DEC="$(printf '0.%02d' "${L_PCT}")"
+    VL_DEC="$(printf '0.%02d' "${VL_PCT}")"
+    TAG="$(printf 'l%02d_vl%02d' "${L_PCT}" "${VL_PCT}")"
+    RESULT_FILE="${SWEEP_ROOT}/${TAG}/faithfulness_nodes_intersection_LD_${SLURM_JOB_ID}.pt"
+    mkdir -p "$(dirname "$RESULT_FILE")"
+
+    echo "Running intersection grid pair L=${L_DEC}, VL=${VL_DEC}"
+    python script_node_intersection.py \
+      --model_name qwen2-7b-vl-instruct \
+      --model_path /home/eboccaletti/models/qwen2vl7b \
+      --task_name moments_goal \
+      --moments_cf_mode "${CF_MODE}" \
+      --scores_dir "$SCORES_DIR" \
+      --output_file "$RESULT_FILE" \
+      --l_circuit_percentage "$L_DEC" \
+      --vl_circuit_percentage "$VL_DEC"
+
+    echo "Saved grid result: $RESULT_FILE"
+  done
+done
+
+echo "End time: $(date)"

@@ -1,0 +1,52 @@
+#!/bin/bash
+# Table-5-style intersection sweep for Qwen2 MOMENTS POS-aware sigma0p1.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_Bp1_t5s
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_intersection_gpu_h100_moments_goal_both_POS_sigma0p1_table5_sweep_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_intersection_gpu_h100_moments_goal_both_POS_sigma0p1_table5_sweep_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=08:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+SCORES_DIR="data/moments_goal/results/qwen2-7b-vl-instruct_both_POS_sigma0p1_nap_ig=5"
+DATA_FILE="./data/moments_goal/both_data_sigma0p1.csv"
+SWEEP_ROOT="${SCORES_DIR}/intersection/table5_sweep"
+PAIRS=(
+  "0.01 0.03 l001_vl003" "0.02 0.05 l002_vl005"
+  "0.05 0.08 l005_vl008" "0.10 0.10 l010_vl010"
+  "0.20 0.30 l020_vl030" "0.30 0.50 l030_vl050"
+  "0.50 0.70 l050_vl070" "0.70 0.90 l070_vl090"
+)
+
+echo "=== Qwen2 MOMENTS goal intersection sweep ==="
+echo "=== Counterfactual mode: both; POS-aware sigma0p1 dataset ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+for pair in "${PAIRS[@]}"; do
+  read -r L_PCT VL_PCT TAG <<< "${pair}"
+  RESULT_FILE="${SWEEP_ROOT}/${TAG}/faithfulness_nodes_intersection_LD_${SLURM_JOB_ID}.pt"
+  mkdir -p "$(dirname "${RESULT_FILE}")"
+  python script_node_intersection.py \
+    --model_name qwen2-7b-vl-instruct \
+    --model_path /home/eboccaletti/models/qwen2vl7b \
+    --task_name moments_goal \
+    --moments_cf_mode both \
+    --moments_data_file "${DATA_FILE}" \
+    --scores_dir "${SCORES_DIR}" \
+    --output_file "${RESULT_FILE}" \
+    --l_circuit_percentage "${L_PCT}" \
+    --vl_circuit_percentage "${VL_PCT}"
+done
+
+echo "End time: $(date)"

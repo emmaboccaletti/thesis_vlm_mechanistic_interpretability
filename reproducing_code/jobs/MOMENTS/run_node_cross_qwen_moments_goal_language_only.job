@@ -1,0 +1,44 @@
+#!/bin/bash
+# Cross-modal interchange analysis for the multimodal language-perturbation condition.
+# Note: this is moments_cf_mode=language_only, not --language_only. Both L and VL
+# prompt views are retained so cross-modal interchange remains meaningful.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_language_only_moments_cross
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_cross_gpu_h100_moments_goal_language_only_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_cross_gpu_h100_moments_goal_language_only_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_FILE="data/moments_goal/results/qwen2-7b-vl-instruct_language_only_nap_ig=5/cross_modality/faithfulness_nodes_cross_interchanges_LD_${SLURM_JOB_ID}.pt"
+mkdir -p "$(dirname "$RESULT_FILE")"
+
+echo "=== Qwen2 MOMENTS goal cross-modal interchange ==="
+# echo "=== 30 minute trial ==="
+echo "=== Counterfactual mode: language_only; L/VL views retained ==="
+echo "=== Circuit percentages: L=1%, VL=3%; ap_ig_steps=5 scores ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python script_node_cross_modality_analysis.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode language_only \
+  --scores_dir data/moments_goal/results/qwen2-7b-vl-instruct_language_only_nap_ig=5 \
+  --output_file "$RESULT_FILE" \
+  --l_circuit_percentage 0.01 \
+  --vl_circuit_percentage 0.03
+
+echo "Saved mode-specific result: $RESULT_FILE"
+echo "End time: $(date)"

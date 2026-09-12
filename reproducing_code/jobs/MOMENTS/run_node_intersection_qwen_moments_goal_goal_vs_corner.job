@@ -1,0 +1,47 @@
+#!/bin/bash
+# Fixed intersection analysis for Qwen2 MOMENTS goal_vs_corner.
+# Run after both goal_vs_corner node-circuit jobs have completed.
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=Qwen_gvc_int
+#SBATCH --output=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_intersection_gpu_h100_moments_goal_goal_vs_corner_%j.out
+#SBATCH --error=/home/eboccaletti/reproducing_code/job_outputs/MOMENTS/qwen_node_intersection_gpu_h100_moments_goal_goal_vs_corner_%j.err
+#SBATCH --cpus-per-task=9
+#SBATCH --mem=80G
+#SBATCH --time=03:00:00
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate vlm_qwen_reproducing_env
+set -euo pipefail
+
+cd /home/eboccaletti/reproducing_code/vlm-circuits-analysis
+
+RESULT_ROOT="data/moments_goal/results/qwen2-7b-vl-instruct_goal_vs_corner_nap_ig=5"
+DATA_FILE="data/moments_goal/goal_vs_corner_data.csv"
+RESULT_FILE="${RESULT_ROOT}/intersection/faithfulness_nodes_intersection_LD_${SLURM_JOB_ID}.pt"
+
+mkdir -p "$(dirname "${RESULT_FILE}")"
+
+echo "=== Qwen2 MOMENTS goal_vs_corner intersection ==="
+echo "=== Circuit percentages: L=1%, VL=3% ==="
+echo "=== Data file: ${DATA_FILE} ==="
+echo "Host: $(hostname)"
+echo "Start time: $(date)"
+nvidia-smi || true
+
+python script_node_intersection.py \
+  --model_name qwen2-7b-vl-instruct \
+  --model_path /home/eboccaletti/models/qwen2vl7b \
+  --task_name moments_goal \
+  --moments_cf_mode both \
+  --moments_data_file "${DATA_FILE}" \
+  --moments_total_prompt_count 96 \
+  --scores_dir "${RESULT_ROOT}" \
+  --output_file "${RESULT_FILE}" \
+  --l_circuit_percentage 0.01 \
+  --vl_circuit_percentage 0.03
+
+echo "Saved goal_vs_corner intersection result: ${RESULT_FILE}"
+echo "End time: $(date)"
